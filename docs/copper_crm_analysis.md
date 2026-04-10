@@ -1,12 +1,21 @@
-# Copper CRM Analysis: Step and Repeat LA
+# [ARCHIVED] Copper CRM Analysis: Step and Repeat LA
 
 **Created:** 2026-04-09
-**Modified:** 2026-04-09
-**Version:** 1.0
+**Modified:** 2026-04-10
+**Version:** 2.0
+**Archived:** 2026-04-10
 
 **CRM:** Copper (api.copper.com/developer_api/v1)
 **Business:** Step and Repeat LA (stepandrepeatla.com)
 **Primary User:** codi@stepandrepeatla.com
+
+---
+
+## Archive Note
+
+This document is retained as the original narrative CRM analysis, but it is no longer the active source of truth.
+
+It has been archived because several headline values in this document are stale, most notably the original `19,800` lead count. Use [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md) for current verification guidance and [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md) for the current build direction.
 
 ---
 
@@ -808,4 +817,5 @@ All data was pulled live from the Copper API on April 8, 2026. Results will vary
 
 | Version | Date       | Description                  |
 |---------|------------|------------------------------|
+| 2.0     | 2026-04-10 | Archived the document and redirected readers to the current verification and architecture docs |
 | 1.0     | 2026-04-09 | Initial creation             |

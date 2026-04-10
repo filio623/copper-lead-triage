@@ -1,10 +1,40 @@
 # Copper CRM Findings — Verification Document
+
+**Created:** 2026-04-09
+**Modified:** 2026-04-10
+**Version:** 2.0
+
 **Business:** Step and Repeat LA (stepandrepeatla.com)
 **CRM:** Copper (api.copper.com/developer_api/v1)
 **Auth user:** codi@stepandrepeatla.com
-**Original analysis date:** April 8–9, 2026
+**Original analysis date:** 2026-04-08 to 2026-04-09
 
 This document lists every factual claim made in the CRM assessment PDF, the expected value, and the exact Copper API call an agent should make to verify it. All endpoints use POST with JSON body unless noted.
+
+This is now the active factual reference document for CRM verification. It supersedes the older lead-specific findings document for current verification work.
+
+---
+
+## LIVE SNAPSHOT
+
+The following values were verified live against the Copper API on 2026-04-09:
+
+| Entity / Metric | Verified Value | Note |
+|---|---|---|
+| People | 38,249 | Slightly higher than the original PDF claim of 38,229 |
+| Companies | 17,244 | Slightly higher than the original PDF claim of 17,237 |
+| Leads | 65,650 | Matches corrected lead count |
+| Opportunities | 2,077 | Matches original analysis |
+| Projects | 31 | Matches original analysis |
+| Tasks | 761 | Higher than the earlier "200+" shorthand |
+| Open opportunities | 0 | Matches original analysis |
+| Won opportunities | 1,084 | Matches original analysis |
+| Lost opportunities | 585 | Matches original analysis |
+| Abandoned opportunities | 408 | Matches original analysis |
+| Won revenue | $1,177,865.873 | Rounds to the documented $1,177,866 |
+| New/Repeat on opportunities | 0 / 2,077 populated | Field is completely unused on opportunities |
+| New/Repeat on leads | 0 / 65,650 populated | Field is completely unused on leads |
+| New/Repeat on people | 202 / 38,249 populated | 0.53% populated; still effectively unused |
 
 ---
 
@@ -23,22 +53,22 @@ Content-Type: application/json
 ## SECTION 1 — DATABASE TOTALS
 
 ### 1.1 Total People (Contacts)
-- **Claimed value:** 38,229
+- **Claimed value:** 38,249
 - **Endpoint:** `POST /people/search`
 - **Body:** `{"page_size": 1, "page_number": 1}`
-- **How to verify:** Paginate through all pages with `page_size: 200`, count total records until empty response. Expected total: 38,229.
+- **How to verify:** Paginate through all pages with `page_size: 200`, count total records until empty response. Expected total: 38,249.
 
 ### 1.2 Total Companies
-- **Claimed value:** 17,237
+- **Claimed value:** 17,244
 - **Endpoint:** `POST /companies/search`
 - **Body:** `{"page_size": 1, "page_number": 1}`
-- **How to verify:** Paginate with `page_size: 200`, count all records. Expected total: 17,237.
+- **How to verify:** Paginate with `page_size: 200`, count all records. Expected total: 17,244.
 
 ### 1.3 Total Leads
 - **Claimed value:** 65,650
 - **Endpoint:** `POST /leads/search`
 - **Body:** `{"page_size": 200, "page_number": 1, "sort_by": "date_modified", "sort_direction": "desc"}`
-- **How to verify:** Paginate through all pages (expect ~328 pages × 200 = 65,650). IMPORTANT: send params as JSON body, not URL query params.
+- **How to verify:** Paginate through all pages (328 full pages plus a final page of 50 = 329 total pages). IMPORTANT: send params as JSON body, not URL query params.
 
 ### 1.4 Total Opportunities
 - **Claimed value:** 2,077
@@ -236,8 +266,11 @@ Content-Type: application/json
 - **How to verify:** Group opportunities by `company_id`, sort by count descending, resolve top company names via `GET /companies/{id}`, tally Won count and sum Won `monetary_value`.
 
 ### 5.3 New/Repeat Field Unused
-- **Claimed value:** New/Repeat custom field is empty on virtually every record
-- **How to verify:** `GET /custom_field_definitions` — find field named "New/Repeat" (expected ID: 730946). Pull all opportunities, check custom field 730946 value. Expected: null or empty on nearly all records.
+- **Verified live value (2026-04-09):**
+  - Opportunities: 0 of 2,077 populated
+  - Leads: 0 of 65,650 populated
+  - People: 202 of 38,249 populated (0.53%)
+- **How to verify:** `GET /custom_field_definitions` — find field named "New/Repeat" (expected ID: 730946). Pull opportunities, leads, and people, then inspect custom field 730946 values. The field is functionally unused in the CRM even though a small number of people records are populated.
 
 ---
 
@@ -293,8 +326,8 @@ These are calculated projections, not raw API values. Verify by confirming the u
 
 ```
 [ ] Total leads = 65,650
-[ ] Total contacts = 38,229
-[ ] Total companies = 17,237
+[ ] Total contacts = 38,249
+[ ] Total companies = 17,244
 [ ] Total opportunities = 2,077
 [ ] Open opportunities = 0
 [ ] Won deals = 1,084 / $1,177,866
@@ -306,6 +339,15 @@ These are calculated projections, not raw API values. Verify by confirming the u
 [ ] 245 companies with 2+ deals
 [ ] Media Walls avg won deal = $2,840 (highest product)
 [ ] Retractables win rate = 91% (highest win rate)
-[ ] New/Repeat field (ID: 730946) empty on nearly all records
+[ ] New/Repeat field (ID: 730946) unused on opportunities and leads; only 202 people records populated
 [ ] Loss reason missing on 318 of 585 lost deals (54%)
 ```
+
+---
+
+## Changelog
+
+| Version | Date       | Description |
+|---------|------------|-------------|
+| 2.0     | 2026-04-10 | Added required document metadata, live verification snapshot, updated people and company totals, and recorded current New/Repeat field usage |
+| 1.0     | 2026-04-09 | Initial creation |

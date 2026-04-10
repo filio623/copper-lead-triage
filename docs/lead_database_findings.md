@@ -1,8 +1,17 @@
-# Lead Database Findings — Step and Repeat LA (Copper CRM)
+# [ARCHIVED] Lead Database Findings — Step and Repeat LA (Copper CRM)
 
 **Created:** 2026-04-09
-**Modified:** 2026-04-09
-**Version:** 1.0
+**Modified:** 2026-04-10
+**Version:** 2.0
+**Archived:** 2026-04-10
+
+---
+
+## Archive Note
+
+This document is retained as a record of the lead-count correction work, but it is no longer the active verification document.
+
+Its core lead-count correction remains historically useful, but parts of the narrative are now stale, including the claim that no leads had been modified since 2020. Use [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md) for current verification guidance.
 
 ---
 
@@ -158,4 +167,5 @@ print(f"Execution time: {elapsed:.2f} seconds")
 
 | Version | Date       | Description                  |
 |---------|------------|------------------------------|
+| 2.0     | 2026-04-10 | Archived the document and redirected verification work to the current CRM verification doc |
 | 1.0     | 2026-04-09 | Initial creation             |

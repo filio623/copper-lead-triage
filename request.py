@@ -1,14 +1,14 @@
-from dotenv import load_dotenv
+from backend.app.core.config import get_settings
 import os
 import httpx
 from pprint import pprint
 import time
 
-load_dotenv()
+settings = get_settings()
 
-COPPER_API = os.getenv("COPPER_API")
+COPPER_API = settings.copper_api_key
 
-EMAIL = "codi@stepandrepeatla.com"
+EMAIL = settings.copper_email
 
 all_count = 0
 page = 1
@@ -55,6 +55,7 @@ while True:
         break
 
     page += 1
+    break
 
 print(f"Total leads: {all_count}")
 print(f"First date: {first_date}")
