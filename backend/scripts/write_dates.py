@@ -1,14 +1,13 @@
-from dotenv import load_dotenv
+from backend.app.core.config import get_settings
 import os
 import httpx
 from pprint import pprint
 import time
 
-load_dotenv()
+settings = get_settings()
 
-COPPER_API = os.getenv("COPPER_API")
-
-EMAIL = "codi@stepandrepeatla.com"
+COPPER_API = settings.copper_api_key.get_secret_value()
+EMAIL = settings.copper_email
 
 all_count = 0
 page = 1
