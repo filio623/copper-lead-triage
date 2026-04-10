@@ -52,9 +52,6 @@ class LeadSnapshot(BaseModel):
     date_last_contacted: Optional[datetime] = None
 
 
-
-
-
 class NormalizedLead(BaseModel):
     copper_lead_id: int
     full_name: Optional[str] = None
@@ -65,4 +62,3 @@ class NormalizedLead(BaseModel):
     websites: Optional[list[str]] = None
     city: Optional[str] = None
     source: Optional[str] = None
-    contactable: bool = False
