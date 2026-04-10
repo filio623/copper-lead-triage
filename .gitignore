@@ -1,0 +1,41 @@
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.venv/
+venv/
+
+# Node / TypeScript
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+AGENTS.md
+CLAUDE.md
+
+# Local outputs and generated artifacts
+dates.txt
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+verify_script.py
