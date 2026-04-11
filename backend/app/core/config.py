@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     copper_api_key: SecretStr = Field(description="API Key for Copper CRM")
     copper_email: str = Field(default="codi@stepandrepeatla.com", description="Email address of API key owner")
 
+# LLM API credentials
+    zai_api_key: SecretStr = Field(alias="CEREBRAS_API_KEY", description="API Key for GLM LLM")
+    anthropic_api_key: SecretStr = Field(validation_alias="ANTHROPIC_API_KEY", description="API Key for Claude LLM")
+
 
 @lru_cache()
 def get_settings():
