@@ -1,8 +1,8 @@
 # Docs Index
 
 **Created:** 2026-04-10
-**Modified:** 2026-04-10
-**Version:** 1.0
+**Modified:** 2026-04-12
+**Version:** 1.1
 
 ---
 
@@ -20,7 +20,6 @@ The active documents below should be treated as the current starting point. Arch
 |---|---|
 | [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md) | Current backend-first v1 architecture and build plan |
 | [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md) | Current CRM verification reference, live snapshot, and API verification methods |
-| [Step_and_Repeat_LA_CRM_Assessment.pdf](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/Step_and_Repeat_LA_CRM_Assessment.pdf) | Original assessment deliverable retained for reference |
 
 ---
 
@@ -28,8 +27,10 @@ The active documents below should be treated as the current starting point. Arch
 
 | Document | Why it was archived |
 |---|---|
-| [copper_crm_analysis.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/copper_crm_analysis.md) | Original narrative analysis; contains stale headline counts such as the original 19,800 lead total |
-| [lead_database_findings.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/lead_database_findings.md) | Historical lead-count correction notes; partially superseded by the current verification document |
+| [archive/README.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/archive/README.md) | Archive index for historical assessments and superseded findings |
+| [archive/Step_and_Repeat_LA_CRM_Assessment.pdf](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/archive/Step_and_Repeat_LA_CRM_Assessment.pdf) | Original assessment deliverable preserved as historical reference |
+| [archive/copper_crm_analysis.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/archive/copper_crm_analysis.md) | Original narrative analysis; contains stale headline counts such as the original 19,800 lead total |
+| [archive/lead_database_findings.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/archive/lead_database_findings.md) | Historical lead-count correction notes; partially superseded by the current verification document |
 
 ---
 
@@ -37,7 +38,7 @@ The active documents below should be treated as the current starting point. Arch
 
 - Use the verification document before making claims about current CRM totals
 - Use the architecture document before changing backend direction
-- Treat archived documents as historical context, not active requirements
+- Use `docs/archive/` only for historical context, not active requirements
 
 ---
 
@@ -45,4 +46,5 @@ The active documents below should be treated as the current starting point. Arch
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.1     | 2026-04-12 | Moved superseded and historical materials into `docs/archive/` and updated the index |
 | 1.0     | 2026-04-10 | Initial creation |
