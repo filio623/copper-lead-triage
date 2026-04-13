@@ -2,6 +2,10 @@ import asyncio
 from dataclasses import dataclass
 import re
 from pprint import pprint
+import logfire
+
+logfire.configure()
+logfire.instrument_pydantic_ai()
 
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.openai import OpenAIChatModel
@@ -11,6 +15,8 @@ from backend.app.core.config import get_settings
 from backend.app.models.analysis import LLMAnalysisResult
 from backend.app.models.lead import NormalizedLead
 from backend.app.services.normalize import return_normalized_leads
+
+
 
 
 PLACEHOLDER_VALUES = {"", "--", "unknown", "n/a", "none", "null", "tbd", "test"}
