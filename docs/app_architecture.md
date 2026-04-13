@@ -1,8 +1,8 @@
 # Lead Scoring & Triage Engine — App Architecture
 
 **Created:** 2026-04-09
-**Modified:** 2026-04-12
-**Version:** 2.1
+**Modified:** 2026-04-13
+**Version:** 2.2
 
 **Project:** Step and Repeat LA — AI CRM Applications
 
@@ -60,6 +60,15 @@ Turn a large raw lead database into a reviewable queue of:
 - explainable scores
 - editable outreach drafts
 
+### Primary Job To Be Done
+
+Help an operator work through the existing Copper lead backlog by answering four practical questions for each lead:
+
+- Is this lead a plausible business target?
+- Is this lead complete and contactable enough to act on now?
+- Does this lead look relevant or timely enough to justify research or outreach?
+- What is the recommended next action for a human reviewer?
+
 ### V1 Success Metrics
 
 - Produce a ranked set of leads that are realistically contactable
@@ -72,6 +81,16 @@ Turn a large raw lead database into a reviewable queue of:
 - No automatic Copper write-back without operator approval
 - No embedded Copper UI required to prove value
 - No real-time webhook flow required in the first implementation
+
+### Expected Later Capabilities
+
+The architecture should leave room for later additions that are useful but not required for the first working version:
+
+- external research on a company, venue, or event
+- suggested contacts when the source record is incomplete
+- lead-completion suggestions based on evidence gathered outside Copper
+- timeliness signals such as upcoming events, launches, or campaigns
+- additional LLM tasks such as draft critique, rewrite, or research summarization
 
 ---
 
@@ -96,7 +115,7 @@ Copper API
   -> normalization layer
   -> rules engine
   -> optional enrichment adapter
-  -> LLM analysis layer
+  -> LLM task layer
   -> persistence
   -> review queue
   -> FastAPI wrapper
@@ -108,7 +127,7 @@ The core unit of work is:
 2. normalize and clean it
 3. run deterministic checks
 4. decide whether enrichment is worth doing
-5. generate a structured recommendation and draft
+5. run one or more LLM tasks as needed
 6. store the full evidence trail
 
 ---
@@ -123,7 +142,7 @@ The core unit of work is:
 | `normalize` | Clean raw Copper payloads into a stable internal shape | Copper payloads and custom fields should not leak everywhere |
 | `scoring` | Deterministic completeness and contactability rules | Cheap, explainable filtering before LLM usage |
 | `enrichment` | Optional web lookup adapter for company/context research | Make Tavily or Serper swappable rather than hardcoded |
-| `llm_analysis` | Structured recommendation and draft generation | Keep provider-specific prompting behind one interface |
+| `llm_analysis` | Structured recommendation and later task-specific LLM modules | Keep provider-specific prompting behind one interface |
 | `storage` | Persist lead snapshots, scores, evidence, and review decisions | Support re-runs, auditing, and learning |
 | `pipeline` | Orchestrate the per-lead workflow | Central place for business flow |
 | `batch_runner` | Process samples and bulk runs safely | Bulk-first is the main v1 operating mode |
@@ -156,6 +175,67 @@ class EnrichmentProvider(Protocol):
 ### LLM Layer
 
 Use `PydanticAI` as the harness for typed outputs and provider flexibility. The application should depend on an internal analysis interface, not directly on a single model vendor.
+
+### Agent Strategy
+
+The recommended architecture is:
+
+- one primary per-lead triage agent in v1
+- plain Python orchestration around that agent
+- deterministic rules outside the agent
+- optional enrichment outside the agent
+- additional LLM tasks added as separate, narrowly-scoped modules rather than folded into one giant prompt
+
+The first agent should focus on interpreting a normalized lead plus evidence and returning structured output for:
+
+- fit assessment
+- priority / tier recommendation
+- reasoning summary
+- caution notes
+- suggested next action
+- outreach draft
+
+### Why Not Default To Multi-Agent Or Graphs?
+
+Even if the long-term system becomes more capable, the default recommendation is still not to start with multi-agent orchestration or graph runtimes.
+
+Reasons:
+
+- the hardest problem right now is evaluation quality, not agent coordination
+- debugging one pipeline is much easier than debugging multiple interacting agents
+- cost and latency stay easier to control
+- plain Python keeps the architecture clearer for learning and iteration
+- `pydantic_graph` can be revisited later if the workflow becomes meaningfully stateful or branch-heavy
+
+### When To Add More Agents Or Graph-Like Control Flow
+
+The project should only move beyond the single-agent default once there is a concrete need such as:
+
+- a dedicated research task that is materially different from triage
+- a separate drafting or draft-critique step that benefits from isolation
+- a reviewer or QA step that needs a different prompt contract
+- branching workflows with retries, checkpoints, or resumable state transitions
+
+Until those needs are real, treat the system as a modular single-agent pipeline rather than a multi-agent application.
+
+### Designing For Additional LLM Tasks
+
+The codebase should still be designed to support more than one LLM task over time. The clean pattern is:
+
+- one module per task
+- one typed input contract per task
+- one typed output contract per task
+- orchestration in `pipeline.py`, not inside the agent prompts themselves
+
+Examples of later tasks that may be worth adding:
+
+- company or event research summarization
+- contact-discovery recommendation
+- outreach draft generation
+- outreach draft critique and rewrite
+- human-note summarization
+
+This means the architecture should be extensible without making multi-agent orchestration the foundation.
 
 ---
 
@@ -229,9 +309,9 @@ The enrichment step should gather evidence, not final decisions. For example:
 
 ### Step 5 — LLM Analysis
 
-Pass the normalized lead plus enrichment evidence into a structured LLM call.
+Pass the normalized lead plus enrichment evidence into one or more structured LLM tasks.
 
-The LLM should produce:
+The first triage task should produce:
 
 - priority / tier recommendation
 - industry fit
@@ -240,6 +320,8 @@ The LLM should produce:
 - confidence or caution notes
 
 The LLM should not be trusted as the only source of truth for obvious rules such as missing email, missing name, or immediate disqualification.
+
+Later tasks may generate additional research summaries, draft revisions, or contact suggestions, but they should remain separate task modules with their own typed outputs.
 
 ### Step 6 — Persist
 
@@ -334,17 +416,22 @@ backend/
       db.py
     services/
       normalize.py
-      scoring.py
+      rules.py
+      triage.py
+      enrichment.py
       pipeline.py
       batch.py
       evaluation.py
+      review.py
     repositories/
       analyses.py
       runs.py
+      reviews.py
     main.py
   scripts/
     run_sample.py
     run_bulk.py
+    review_export.py
 ```
 
 ---
@@ -400,6 +487,9 @@ Once the deterministic layer is stable:
 - add structured recommendation output
 - add outreach drafting
 - store prompt and model metadata
+- keep the first implementation centered on one per-lead triage agent
+- add new LLM tasks as separate modules only when they have a clear job and typed output
+- avoid multi-agent orchestration until the workflow clearly needs branching, review, or specialized agent roles
 
 Checkpoint on 2026-04-12:
 
@@ -450,6 +540,10 @@ This project is both a product effort and a learning exercise. Human review keep
 
 The business logic should survive model changes. `PydanticAI` is a good fit because it supports structured outputs while keeping the system from depending too directly on one vendor.
 
+### Why not start with multi-agent architecture if the system may grow later?
+
+Because future complexity is not a reason to front-load present complexity. The safer path is to keep the workflow modular enough that additional LLM tasks or agents can be added later without forcing them into the first milestone.
+
 ---
 
 ## Current Notes
@@ -464,6 +558,7 @@ The business logic should survive model changes. `PydanticAI` is a good fit beca
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 2.2     | 2026-04-13 | Clarified the app job-to-be-done, documented the single-agent-first `PydanticAI` strategy, and added guidance for later LLM task expansion without defaulting to multi-agent orchestration |
 | 2.1     | 2026-04-12 | Added an implementation checkpoint describing the current normalize -> gate -> PydanticAI triage prototype status |
 | 2.0     | 2026-04-10 | Reframed the project around a backend-first, operator-reviewed v1 and added a concrete component framework |
 | 1.0     | 2026-04-09 | Initial creation |
