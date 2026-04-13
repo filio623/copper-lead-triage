@@ -29,7 +29,7 @@ last_date = None
 while True:
 
     params = {
-    "page_size": 200,
+    "page_size": 1,
     "page_number": page,
     "sort_by": "date_modified",
     "sort_direction": "desc"
@@ -64,7 +64,4 @@ print(f"Last date: {last_date}")
 if end_time is not None:
     print(f"Execution time: {end_time - start_time} seconds")
 
-settings_data = settings.model_dump()
-
-pprint(settings_data)
-
+pprint(response.json())
