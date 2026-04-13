@@ -1,8 +1,8 @@
 # Lead Scoring & Triage Engine — App Architecture
 
 **Created:** 2026-04-09
-**Modified:** 2026-04-10
-**Version:** 2.0
+**Modified:** 2026-04-12
+**Version:** 2.1
 
 **Project:** Step and Repeat LA — AI CRM Applications
 
@@ -21,6 +21,31 @@ This document replaces the earlier SDK-first framing with a narrower v1:
 - Backend processing before Copper UI
 
 The long-term product can still grow into a Copper embedded app and later into daily operational tooling, but the initial version should be a review and recommendation system.
+
+---
+
+## Current Implementation Checkpoint
+
+As of 2026-04-12, the backend work has reached an early local-script checkpoint.
+
+Implemented now:
+
+- `backend/app/services/normalize.py` fetches Copper leads with the search API, validates them into `LeadSnapshot`, and returns `NormalizedLead` objects
+- `backend/app/services/scoring.py` applies a simple deterministic gate before any model call
+- the current deterministic gate is intentionally narrow: send a lead to the LLM only if it has basic identity data plus at least one usable contact method
+- `backend/app/services/scoring.py` also contains the first `PydanticAI` triage agent using typed `LLMAnalysisResult` output
+- the current agent uses `deps_type` plus `RunContext` to inject the normalized lead and deterministic gate summary into dynamic instructions
+- the local scoring script can now be run manually to test one or more leads through the fetch -> normalize -> gate -> LLM path
+
+Not implemented yet:
+
+- enrichment tools and external research
+- persistence of lead analyses or run history
+- orchestration in `pipeline.py`
+- FastAPI endpoints
+- review queue UI
+
+This means the current project state is best understood as an interactive local triage prototype, not yet a full backend service.
 
 ---
 
@@ -347,6 +372,12 @@ Build a local script first, not an API.
 - SQLite persistence
 - sample runner script
 
+Checkpoint on 2026-04-12:
+
+- `config`, `models`, normalization, and first-pass deterministic gating are in place
+- the local sample runner currently lives in `backend/app/services/scoring.py`
+- SQLite persistence is not implemented yet
+
 Milestone:
 
 Given a small batch of Copper leads, the system can produce a stored analysis and a readable explanation for each lead.
@@ -369,6 +400,14 @@ Once the deterministic layer is stable:
 - add structured recommendation output
 - add outreach drafting
 - store prompt and model metadata
+
+Checkpoint on 2026-04-12:
+
+- `PydanticAI` has been added for local lead triage
+- structured `LLMAnalysisResult` output is wired into the current prototype
+- prompt structure now combines stable instructions with dependency-driven runtime lead context
+- outreach drafting exists in the schema and prompt, but still needs qualitative review and tuning
+- prompt/version/model metadata storage is not implemented yet
 
 ### Phase 4 — FastAPI Wrapper
 
@@ -425,5 +464,6 @@ The business logic should survive model changes. `PydanticAI` is a good fit beca
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 2.1     | 2026-04-12 | Added an implementation checkpoint describing the current normalize -> gate -> PydanticAI triage prototype status |
 | 2.0     | 2026-04-10 | Reframed the project around a backend-first, operator-reviewed v1 and added a concrete component framework |
 | 1.0     | 2026-04-09 | Initial creation |

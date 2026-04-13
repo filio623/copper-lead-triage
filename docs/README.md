@@ -2,7 +2,7 @@
 
 **Created:** 2026-04-10
 **Modified:** 2026-04-12
-**Version:** 1.1
+**Version:** 1.2
 
 ---
 
@@ -18,7 +18,7 @@ The active documents below should be treated as the current starting point. Arch
 
 | Document | Purpose |
 |---|---|
-| [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md) | Current backend-first v1 architecture and build plan |
+| [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md) | Current backend-first v1 architecture, build plan, and implementation checkpoint |
 | [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md) | Current CRM verification reference, live snapshot, and API verification methods |
 
 ---
@@ -46,5 +46,6 @@ The active documents below should be treated as the current starting point. Arch
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.2     | 2026-04-12 | Updated the architecture doc entry to reflect current implementation checkpoint tracking |
 | 1.1     | 2026-04-12 | Moved superseded and historical materials into `docs/archive/` and updated the index |
 | 1.0     | 2026-04-10 | Initial creation |

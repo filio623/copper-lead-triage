@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 # LLM API credentials
     zai_api_key: SecretStr = Field(alias="CEREBRAS_API_KEY", description="API Key for GLM LLM")
     anthropic_api_key: SecretStr = Field(validation_alias="ANTHROPIC_API_KEY", description="API Key for Claude LLM")
-    pydandtic_ai_gateway_api_key: SecretStr = Field(alias="PYDANTIC_AI_GATEWAY_API_KEY", description="API Key for Pydantic AI Gateway")
+    pydantic_ai_gateway_api_key: SecretStr = Field(alias="PYDANTIC_AI_GATEWAY_API_KEY", description="API Key for Pydantic AI Gateway")
 
 
 @lru_cache()

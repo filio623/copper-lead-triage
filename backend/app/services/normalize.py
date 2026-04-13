@@ -1,7 +1,7 @@
 import time
 from pprint import pprint
 import httpx
-from typing import Dict
+from typing import Dict, List
 
 from backend.app.core.config import get_settings
 from backend.app.models.lead import LeadSnapshot, NormalizedLead
@@ -21,44 +21,31 @@ headers = {
     "Content-Type": "application/json",
 }
 
-params = {
-    "page_size": 200,
-    "page_number": page,
-    "sort_by": "date_modified",
-    "sort_direction": "desc"
-    }
 
-start_time = time.time()
-end_time = None
-
-first_date = None
-last_date = None
-
-
-def get_lead(page_size:int = 1, page_number:int = 1, headers: Dict[str, str] = None) -> Dict:
+def get_leads_page(page_size: int = 1, page_number: int = 1, headers: Dict[str, str] = headers) -> List[Dict]:
     try:
-        params = {
+        data = {
             "page_size": page_size,
             "page_number": page_number,
             "sort_by": "date_modified",
             "sort_direction": "desc"
         }
-        response = httpx.post("https://api.copper.com/developer_api/v1/leads/search", headers=headers, params=params)
+        # Copper Search API expects search parameters in the JSON body for POST requests
+        response = httpx.post("https://api.copper.com/developer_api/v1/leads/search", headers=headers, json=data)
 
         if response.status_code == 200:
             raw_data = response.json()
-            
-            return raw_data[0] if raw_data else None
+            return raw_data if isinstance(raw_data, list) else []
         else:
             print(f"Failed to fetch leads. Status code: {response.status_code}, Response: {response.text}")
-            return None
+            return []
 
     except httpx.HTTPError as e:
         print(f"An error occurred while fetching leads: {e}")
-        return None
+        return []
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-        return None
+        return []
 
 
 def validate_lead(lead_data: Dict) -> LeadSnapshot:
@@ -79,11 +66,40 @@ def normalize_lead(lead_snapshot: LeadSnapshot) -> NormalizedLead:
     )
     return normalized
 
+def return_normalized_leads(page_number: int = 1, page_size: int = 1, pages: int = 1, get_all: bool = False) -> List[NormalizedLead]:
+    normalized_leads = []
+    current_page = page_number
+    
+    if get_all:
+        while True:
+            leads_data = get_leads_page(page_number=current_page, page_size=page_size)
+            if not leads_data:
+                break
+            
+            for lead_dict in leads_data:
+                validated_lead = validate_lead(lead_dict)
+                normalized_lead = normalize_lead(validated_lead)
+                normalized_leads.append(normalized_lead)
+            
+            current_page += 1
+    else:
+        for _ in range(pages):
+            leads_data = get_leads_page(page_number=current_page, page_size=page_size)
+            if not leads_data:
+                break
+                
+            for lead_dict in leads_data:
+                validated_lead = validate_lead(lead_dict)
+                normalized_lead = normalize_lead(validated_lead)
+                normalized_leads.append(normalized_lead)
+            
+            current_page += 1
+            
+    return normalized_leads
+
+
 if __name__ == "__main__":
-    page_number = 1
-    while page_number < 5:
-        snapshot = get_lead(page_size=1, page_number=page_number, headers=headers)
-        validated_lead = validate_lead(snapshot)
-        normalized_lead = normalize_lead(validated_lead)
-        pprint(normalized_lead)
-        page_number += 1
+    # Test with a single page of 5 leads
+    leads = return_normalized_leads(page_number=1, page_size=5, pages=1)
+    for lead in leads:
+        pprint(lead)
