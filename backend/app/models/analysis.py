@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from backend.app.models.lead import NormalizedLead
 
 
-RuleAction = Literal["pursue", "review", "hold", "reject"]
+RuleAction = Literal["pursue", "research", "hold", "reject"]
 PriorityTier = Literal["high", "medium", "low", "disqualify"]
 IndustryFit = Literal["strong", "moderate", "weak", "unknown"]
 ReviewStatus = Literal["pending", "approved", "rejected", "edited"]
@@ -15,9 +15,14 @@ ReviewStatus = Literal["pending", "approved", "rejected", "edited"]
 class RuleScoreResult(BaseModel):
     completeness_score: int = 0
     contactability_score: int = 0
+    business_fit_score: int = 0
+    geography_score: int = 0
+    research_worthy: bool = False
     disqualifiers: list[str] = Field(default_factory=list)
+    strengths: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
     eligible_for_enrichment: bool = False
-    recommended_rule_action: RuleAction = "review"
+    recommended_rule_action: RuleAction = "hold"
     rule_reasons: list[str] = Field(default_factory=list)
 
 

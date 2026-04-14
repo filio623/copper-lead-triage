@@ -2,7 +2,7 @@
 
 **Created:** 2026-04-09
 **Modified:** 2026-04-13
-**Version:** 2.2
+**Version:** 2.3
 
 **Project:** Step and Repeat LA — AI CRM Applications
 
@@ -26,16 +26,18 @@ The long-term product can still grow into a Copper embedded app and later into d
 
 ## Current Implementation Checkpoint
 
-As of 2026-04-12, the backend work has reached an early local-script checkpoint.
+As of 2026-04-13, the backend work has moved beyond the original local-script checkpoint but is still not yet a full service.
 
 Implemented now:
 
 - `backend/app/services/normalize.py` fetches Copper leads with the search API, validates them into `LeadSnapshot`, and returns `NormalizedLead` objects
-- `backend/app/services/scoring.py` applies a simple deterministic gate before any model call
-- the current deterministic gate is intentionally narrow: send a lead to the LLM only if it has basic identity data plus at least one usable contact method
-- `backend/app/services/scoring.py` also contains the first `PydanticAI` triage agent using typed `LLMAnalysisResult` output
-- the current agent uses `deps_type` plus `RunContext` to inject the normalized lead and deterministic gate summary into dynamic instructions
-- the local scoring script can now be run manually to test one or more leads through the fetch -> normalize -> gate -> LLM path
+- `backend/scripts/build_review_sample.py` creates a more representative Phase 0 review sample across the lead backlog
+- a first-pass manual review rubric now exists in `docs/phase0_review_rubric.md`
+- `backend/app/services/rules.py` now implements the first deterministic scoring layer and returns `RuleScoreResult`
+- `backend/app/models/analysis.py` now includes the richer rule score fields needed by the rubric
+- `tests/test_rules.py` covers the first-pass deterministic scoring contract
+- `backend/app/services/scoring.py` still contains the first `PydanticAI` triage prototype using typed `LLMAnalysisResult` output
+- the current triage prototype still uses legacy boolean gating and has not yet been rewired to the new rules layer
 
 Not implemented yet:
 
@@ -44,8 +46,9 @@ Not implemented yet:
 - orchestration in `pipeline.py`
 - FastAPI endpoints
 - review queue UI
+- migration of the current triage prototype from `scoring.py` into the planned `triage.py` + `pipeline.py` structure
 
-This means the current project state is best understood as an interactive local triage prototype, not yet a full backend service.
+This means the current project state is best understood as a partially split backend prototype: normalization and first-pass rules now exist as separate layers, while triage, persistence, and orchestration still need to be consolidated into the target service architecture.
 
 ---
 
@@ -558,6 +561,7 @@ Because future complexity is not a reason to front-load present complexity. The 
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 2.3     | 2026-04-13 | Updated the implementation checkpoint to include representative sampling, the Phase 0 rubric, and the first deterministic `rules.py` layer |
 | 2.2     | 2026-04-13 | Clarified the app job-to-be-done, documented the single-agent-first `PydanticAI` strategy, and added guidance for later LLM task expansion without defaulting to multi-agent orchestration |
 | 2.1     | 2026-04-12 | Added an implementation checkpoint describing the current normalize -> gate -> PydanticAI triage prototype status |
 | 2.0     | 2026-04-10 | Reframed the project around a backend-first, operator-reviewed v1 and added a concrete component framework |

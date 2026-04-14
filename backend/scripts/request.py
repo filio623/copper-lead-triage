@@ -1,6 +1,7 @@
 from backend.app.core.config import get_settings
 import os
 import httpx
+#from httpx import Client
 from pprint import pprint
 import time
 
@@ -27,14 +28,13 @@ first_date = None
 last_date = None
 
 while True:
-
+    break
     params = {
     "page_size": 1,
     "page_number": page,
     "sort_by": "date_modified",
     "sort_direction": "desc"
     }
-
     
     response = httpx.post("https://api.copper.com/developer_api/v1/leads/search", headers=headers, params=params)
 
@@ -64,4 +64,6 @@ print(f"Last date: {last_date}")
 if end_time is not None:
     print(f"Execution time: {end_time - start_time} seconds")
 
-pprint(response.json())
+with httpx.Client(timeout=60.0) as client:
+    response = client.get("https://api.copper.com/developer_api/v1/leads/53081378", headers=headers)
+    pprint(response.json())

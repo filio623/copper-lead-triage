@@ -2,7 +2,7 @@
 
 **Created:** 2026-04-10
 **Modified:** 2026-04-13
-**Version:** 1.3
+**Version:** 1.5
 
 ---
 
@@ -21,6 +21,7 @@ The active documents below should be treated as the current starting point. Arch
 | [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md) | Current backend-first v1 architecture, build plan, and implementation checkpoint |
 | [build_plan.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/build_plan.md) | Step-by-step implementation checklist and target module map for building the app |
 | [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md) | Current CRM verification reference, live snapshot, and API verification methods |
+| [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md) | First-pass manual review rubric derived from the labeled Phase 0 lead sample |
 
 ---
 
@@ -47,6 +48,8 @@ The active documents below should be treated as the current starting point. Arch
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.5     | 2026-04-13 | Refreshed the active docs index after the Phase 0 rubric and deterministic rules milestone |
+| 1.4     | 2026-04-13 | Added the active Phase 0 review rubric document to the docs index |
 | 1.3     | 2026-04-13 | Added the active build-plan document to the docs index |
 | 1.2     | 2026-04-12 | Updated the architecture doc entry to reflect current implementation checkpoint tracking |
 | 1.1     | 2026-04-12 | Moved superseded and historical materials into `docs/archive/` and updated the index |

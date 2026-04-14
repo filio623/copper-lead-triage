@@ -2,10 +2,10 @@
 
 **Created:** 2026-04-13
 **Modified:** 2026-04-13
-**Version:** 1.0
+**Version:** 1.2
 
 **Status:** Active working plan
-**Related Docs:** [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md), [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md)
+**Related Docs:** [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md), [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md), [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md)
 
 ---
 
@@ -34,6 +34,12 @@ Not in place yet:
 - orchestration pipeline
 - API routes
 - review workflow
+
+### Phase 0 Progress Note
+
+As of 2026-04-13, a first-pass review rubric has been created from 48 manually labeled leads in the Phase 0 sample. That rubric should now be used as the reference for the first deterministic scoring implementation.
+
+As of 2026-04-13, the representative review-sample builder script also exists at `backend/scripts/build_review_sample.py`.
 
 ---
 
@@ -70,6 +76,13 @@ Exit criteria:
 
 - there is a shared definition of a good lead
 - there is a shared definition of a good draft
+
+Current status on 2026-04-13:
+
+- a first-pass action rubric now exists in [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md)
+- the rubric is good enough to begin drafting the first deterministic rules
+- the review-sample builder script exists and can regenerate the manual review set
+- outreach-draft quality standards still need to be sharpened as more samples are reviewed
 
 ### Phase 1 — Data Contracts And Normalization Hardening
 
@@ -117,6 +130,13 @@ Exit criteria:
 
 - rule scoring works without the LLM
 - you can explain every score from stored rule output
+
+Current status on 2026-04-13:
+
+- `backend/app/services/rules.py` now contains the first implemented deterministic scoring layer
+- `backend/app/models/analysis.py` has been updated to support richer rule output
+- `tests/test_rules.py` covers the initial scoring contract
+- the next step is to replace the legacy boolean gate in `backend/app/services/scoring.py` with the new rule output or move triage into `triage.py`
 
 ### Phase 3 — LLM Task Layer
 
@@ -291,4 +311,6 @@ Exit criteria:
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.2     | 2026-04-13 | Recorded the review-sample builder and the first implemented deterministic rules milestone |
+| 1.1     | 2026-04-13 | Added the first-pass Phase 0 rubric as an input to the build plan and noted current Phase 0 progress |
 | 1.0     | 2026-04-13 | Initial build-plan document created |
