@@ -1,5 +1,5 @@
-from datetime import datetime
-from typing import Literal, Optional
+from datetime import datetime, UTC
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -59,5 +59,13 @@ class LeadAnalysisRecord(BaseModel):
     enrichment_result: Optional[EnrichmentResult] = None
     llm_analysis: Optional[LLMAnalysisResult] = None
     review_status: ReviewStatus = "pending"
-    processed_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    processed_at: datetime = Field(default_factory=datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=datetime.now(UTC))
+
+class TriageInput(BaseModel):
+    normalized_lead: NormalizedLead
+    rule_score: RuleScoreResult
+    enrichment_result: Optional[EnrichmentResult] = None
+
+
+

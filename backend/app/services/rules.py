@@ -385,8 +385,10 @@ if __name__ == "__main__":
     for lead in leads:
         score = score_lead(lead)
         send = should_send_to_llm(score)
+        print("*************Lead Analysis:***********")
         pprint(lead.model_dump())
+        print("*************Rule Score:**************")
         pprint(score.model_dump())
-        print("*************************")
+        print("*************Should Send to LLM:************")
         print(f"Should I send to the LLM? : {send}")
         print("*" * 20)

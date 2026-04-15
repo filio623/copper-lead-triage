@@ -1,8 +1,8 @@
 # Lead Scoring & Triage Engine — App Architecture
 
 **Created:** 2026-04-09
-**Modified:** 2026-04-13
-**Version:** 2.3
+**Modified:** 2026-04-14
+**Version:** 2.4
 
 **Project:** Step and Repeat LA — AI CRM Applications
 
@@ -26,7 +26,7 @@ The long-term product can still grow into a Copper embedded app and later into d
 
 ## Current Implementation Checkpoint
 
-As of 2026-04-13, the backend work has moved beyond the original local-script checkpoint but is still not yet a full service.
+As of 2026-04-14, the backend work has moved beyond the original local-script checkpoint but is still not yet a full service.
 
 Implemented now:
 
@@ -35,9 +35,11 @@ Implemented now:
 - a first-pass manual review rubric now exists in `docs/phase0_review_rubric.md`
 - `backend/app/services/rules.py` now implements the first deterministic scoring layer and returns `RuleScoreResult`
 - `backend/app/models/analysis.py` now includes the richer rule score fields needed by the rubric
+- `backend/app/models/analysis.py` now includes a first `TriageInput` model for the planned Phase 3 triage task contract
 - `tests/test_rules.py` covers the first-pass deterministic scoring contract
 - `backend/app/services/scoring.py` still contains the first `PydanticAI` triage prototype using typed `LLMAnalysisResult` output
-- the current triage prototype still uses legacy boolean gating and has not yet been rewired to the new rules layer
+- `backend/app/services/triage.py` now contains an early local proof-of-concept triage skeleton for Phase 3 experimentation
+- the current local triage proof-of-concept still needs to be turned into a reusable service boundary and rewired to the target architecture
 
 Not implemented yet:
 
@@ -46,9 +48,14 @@ Not implemented yet:
 - orchestration in `pipeline.py`
 - FastAPI endpoints
 - review queue UI
-- migration of the current triage prototype from `scoring.py` into the planned `triage.py` + `pipeline.py` structure
+- a reusable triage service entrypoint that cleanly consumes `TriageInput`
+- prompt/version/model metadata capture in the planned service architecture
+- contract tests for the Phase 3 triage task
+- migration of the current triage proof-of-concept into the planned `triage.py` + `pipeline.py` structure
 
 This means the current project state is best understood as a partially split backend prototype: normalization and first-pass rules now exist as separate layers, while triage, persistence, and orchestration still need to be consolidated into the target service architecture.
+
+As of 2026-04-14, the recommended next step is to keep the first agent narrowly scoped to triage judgment and optional draft generation, keep online research as a later separate enrichment task, and formalize the Phase 3 service contract in `backend/app/services/triage.py` and `backend/app/clients/llm.py` before moving on to orchestration.
 
 ---
 
@@ -561,6 +568,7 @@ Because future complexity is not a reason to front-load present complexity. The 
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 2.4     | 2026-04-14 | Recorded the Phase 3 triage-task start, including the first `TriageInput` model and local triage proof-of-concept status |
 | 2.3     | 2026-04-13 | Updated the implementation checkpoint to include representative sampling, the Phase 0 rubric, and the first deterministic `rules.py` layer |
 | 2.2     | 2026-04-13 | Clarified the app job-to-be-done, documented the single-agent-first `PydanticAI` strategy, and added guidance for later LLM task expansion without defaulting to multi-agent orchestration |
 | 2.1     | 2026-04-12 | Added an implementation checkpoint describing the current normalize -> gate -> PydanticAI triage prototype status |

@@ -1,8 +1,8 @@
 # Lead Triage Engine — Build Plan
 
 **Created:** 2026-04-13
-**Modified:** 2026-04-13
-**Version:** 1.2
+**Modified:** 2026-04-14
+**Version:** 1.3
 
 **Status:** Active working plan
 **Related Docs:** [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md), [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md), [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md)
@@ -25,6 +25,7 @@ Already in place:
 - lead validation and first-pass normalization exist
 - a local deterministic gate exists
 - a first `PydanticAI` triage prototype exists
+- a first `TriageInput` model now exists for the planned triage service contract
 
 Not in place yet:
 
@@ -138,6 +139,14 @@ Current status on 2026-04-13:
 - `tests/test_rules.py` covers the initial scoring contract
 - the next step is to replace the legacy boolean gate in `backend/app/services/scoring.py` with the new rule output or move triage into `triage.py`
 
+Current status on 2026-04-14:
+
+- `backend/app/models/analysis.py` now includes a first `TriageInput` model for the Phase 3 triage task contract
+- `backend/app/services/triage.py` now has an early local proof-of-concept agent skeleton for per-lead triage experimentation
+- the local triage harness now passes structured deps correctly and injects the serialized triage input into the prompt for testing
+- `backend/app/clients/llm.py` is still a placeholder and should become the thin provider/model setup layer before triage is formalized further
+- `tests/test_triage_contracts.py` is still a placeholder and should be the next place to lock the Phase 3 contract down
+
 ### Phase 3 — LLM Task Layer
 
 Goal:
@@ -160,6 +169,13 @@ Exit criteria:
 
 - the agent only handles judgment and drafting tasks
 - deterministic validity checks remain outside the agent
+
+Near-term implementation notes on 2026-04-14:
+
+- keep the first agent focused on triage judgment and optional drafting, not online research
+- treat enrichment as a later separate task instead of folding web research into the first triage agent
+- move from the current local proof-of-concept harness to a reusable service entrypoint in `backend/app/services/triage.py`
+- add contract tests for input shaping, structured output validation, and triage gating behavior before moving on to pipeline orchestration
 
 ### Phase 4 — Persistence
 
@@ -311,6 +327,7 @@ Exit criteria:
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.3     | 2026-04-14 | Recorded the Phase 3 triage-task start, the new `TriageInput` contract, and the early local triage proof-of-concept status |
 | 1.2     | 2026-04-13 | Recorded the review-sample builder and the first implemented deterministic rules milestone |
 | 1.1     | 2026-04-13 | Added the first-pass Phase 0 rubric as an input to the build plan and noted current Phase 0 progress |
 | 1.0     | 2026-04-13 | Initial build-plan document created |
