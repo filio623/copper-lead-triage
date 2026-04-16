@@ -1,6 +1,5 @@
 import asyncio
 from dataclasses import dataclass
-import re
 import logfire
 
 logfire.configure()
@@ -8,33 +7,31 @@ logfire.instrument_pydantic_ai()
 
 from pydantic_ai import Agent, RunContext
 from backend.app.models.analysis import TriageInput, LLMAnalysisResult
-from pydantic_ai.models.openai import OpenAIChatModel
-from pydantic_ai.providers.gateway import gateway_provider
-from backend.app.core.config import get_settings
+from backend.app.clients.llm import get_triage_model, get_triage_model_metadata
+from backend.app.services.rules import should_send_to_llm
 
 
+# This prompt version gives you a stable identifier for the first triage task.
+# It will matter later when you start comparing prompt changes over time.
+TRIAGE_PROMPT_VERSION = "v1"
 
-"""TODO build guide for the primary PydanticAI triage task.
+# These are the persistent high-level instructions for the triage task.
+# The goal is to keep the agent focused on judgment and drafting, not on
+# re-checking deterministic rules or inventing facts that are not present.
+TRIAGE_INSTRUCTIONS = """
+You are reviewing Copper CRM leads for Step and Repeat LA.
 
-Purpose:
-- interpret a normalized lead plus evidence
-- return structured triage output without owning deterministic validation
+Your job is to interpret the provided lead record and deterministic rule output.
 
-Suggested responsibilities:
-- build the triage task input
-- define the triage agent
-- run the task and validate the structured output
-- attach prompt version and model metadata for persistence
+Important rules:
+- Do not invent facts that are not present in the provided input.
+- Treat the rule score as context, not as the only source of truth.
+- Focus on business fit, actionability, and whether the lead deserves human attention.
+- Keep reasoning concise and grounded in the provided data.
+- If data is missing, acknowledge the uncertainty instead of filling gaps with guesses.
+- Return structured output that matches the requested schema.
 
-Implementation checklist:
-- decide what the agent should receive from rules and enrichment
-- define how prompt instructions are composed
-- keep one primary per-lead triage task for v1
-- separate later tasks such as draft critique into their own modules if needed
-
-Questions to answer while implementing:
-- what information should be passed as dependencies versus prompt text?
-- what output fields are required for a useful human review queue?
+Step and Repeat LA sells event backdrops, step and repeats, media walls, branded displays, and related event-signage products.
 """
 
 
@@ -43,13 +40,113 @@ class TriageDeps:
     lead: TriageInput
     gate_reason: str
 
-instructions = "Your job is to take the attached data and provide an analysis of what you think of it"
+# This keeps your simple module-level agent definition in place, but now the
+# model wiring is pulled from the thin `clients/llm.py` helper.
+triage_agent = Agent(
+    model=get_triage_model(),
+    instructions=TRIAGE_INSTRUCTIONS,
+    deps_type=TriageDeps,
+    output_type=LLMAnalysisResult,
+)
+
+# This instruction hook shows one clean use of `deps`: the agent gets a short,
+# human-readable gate summary without you having to manually repeat it in the
+# module-level instruction string every time.
+@triage_agent.instructions
+def add_triage_context(ctx: RunContext[TriageDeps]) -> str:
+    return f"""Deterministic triage gate summary:
+- {ctx.deps.gate_reason}
+
+Prompt version:
+- {TRIAGE_PROMPT_VERSION}
+"""
 
 
-provider = gateway_provider("openai", api_key=get_settings().pydantic_ai_gateway_api_key.get_secret_value())
-model = OpenAIChatModel("gpt-5.4-nano", provider=provider)
+def should_run_triage(triage_input: TriageInput) -> bool:
+    # The rules layer owns the gating decision. This helper just makes the
+    # triage service boundary explicit and easy to read from callers.
+    return should_send_to_llm(triage_input.rule_score)
 
-triage_agent = Agent(model=model, instructions=instructions, deps_type=TriageDeps, output_type=LLMAnalysisResult)
+
+def build_gate_reason(triage_input: TriageInput) -> str:
+    # This creates a compact summary from the deterministic rule result so the
+    # model can quickly understand why the lead reached triage.
+    rule_score = triage_input.rule_score
+    action = rule_score.recommended_rule_action
+
+    reason_parts = [f"Rules recommended '{action}'."]
+
+    if rule_score.rule_reasons:
+        reason_parts.append(f"Primary reasons: {' '.join(rule_score.rule_reasons[:2])}")
+
+    if rule_score.disqualifiers:
+        reason_parts.append(f"Disqualifiers noted: {' '.join(rule_score.disqualifiers[:2])}")
+
+    return " ".join(reason_parts)
+
+
+def build_triage_deps(triage_input: TriageInput) -> TriageDeps:
+    # This keeps construction of the deps object in one place so the async
+    # service function and the local demo harness use the same shape.
+    return TriageDeps(
+        lead=triage_input,
+        gate_reason=build_gate_reason(triage_input),
+    )
+
+
+def build_triage_prompt(triage_input: TriageInput) -> str:
+    # This is the task-specific prompt body. For now it directly includes the
+    # serialized triage input because that is the simplest working way to let
+    # the model see the normalized lead and rule output together.
+    return f"""
+Please analyze this lead for Step and Repeat LA and return structured output.
+
+Focus on:
+- priority_tier
+- industry_fit
+- reasoning_summary
+- confidence
+- caution_notes
+- outreach_subject
+- outreach_body
+- personalization_basis
+- draft_warnings
+- usable_without_rewrite
+
+Use the deterministic rule output as context, but do not merely repeat it.
+Do not invent missing facts. If the lead is weak or uncertain, say so clearly.
+
+Triage input:
+{triage_input.model_dump_json(indent=2)}
+"""
+
+
+async def analyze_triage_input(triage_input: TriageInput) -> LLMAnalysisResult:
+    # This is the main async service entrypoint that later code in `pipeline.py`
+    # should call once normalization and rules have already happened.
+    if not should_run_triage(triage_input):
+        raise ValueError(
+            "Triage should only run for leads that passed the deterministic gate."
+        )
+
+    triage_deps = build_triage_deps(triage_input)
+    user_prompt = build_triage_prompt(triage_input)
+    result = await triage_agent.run(user_prompt=user_prompt, deps=triage_deps)
+    return result.output
+
+
+def analyze_triage_input_sync(triage_input: TriageInput) -> LLMAnalysisResult:
+    # This sync wrapper is convenient for local experimentation and simple
+    # scripts so you do not have to manage an event loop every time.
+    return asyncio.run(analyze_triage_input(triage_input))
+
+
+def get_triage_service_metadata() -> dict[str, str]:
+    # This exposes minimal task metadata now so you can inspect which prompt
+    # and model are being used even before persistence exists.
+    metadata = get_triage_model_metadata()
+    metadata["prompt_version"] = TRIAGE_PROMPT_VERSION
+    return metadata
 
 
 
@@ -96,50 +193,18 @@ if __name__ == "__main__":
         rule_score=score_lead(first_lead),
     )
 
-    # This keeps your deps wrapper and gives the Agent the exact dependency
-    # shape it expects because the agent was declared with `deps_type=TriageDeps`.
-    triage_deps = TriageDeps(
-        lead=triage_input,
-        gate_reason="Lead has a strong business fit and is contactable, but has some minor completeness issues that may be easily resolved with enrichment. Worth getting LLM insights to determine if it's worth pursuing."
-    )
-
-    # This prompt is where we manually inject the actual lead data for now.
-    # It is not the final architecture, but it works for a rough POC because
-    # your current agent instructions do not yet automatically include `deps`.
-    user_prompt = f"""
-Please analyze this lead for Step and Repeat LA and return structured output.
-
-Use the deterministic rules as context, but do not just repeat them.
-Focus on:
-- priority_tier
-- industry_fit
-- reasoning_summary
-- confidence
-- caution_notes
-- outreach_subject
-- outreach_body
-- personalization_basis
-- draft_warnings
-- usable_without_rewrite
-
-Gate summary:
-{triage_deps.gate_reason}
-
-Triage input:
-{triage_input.model_dump_json(indent=2)}
-"""
+    # This now uses the shared helper so the local harness exercises the same
+    # service logic that later callers will rely on.
+    triage_deps = build_triage_deps(triage_input)
     print(leads_to_send)
+    print(get_triage_service_metadata())
 
     # This optional debug print lets you inspect the exact structured payload
     # that you are sending into the proof-of-concept agent run.
     # print(triage_input.model_dump_json(indent=2))
 
-    # This now passes the correct deps object and a prompt that actually
-    # contains the lead and rule data the model needs to do the task.
-    response = triage_agent.run_sync(user_prompt=user_prompt, deps=triage_deps)
-
     print("*************LLM Analysis Result:***********")
-    print(response.output.model_dump_json(indent=2))
-
+    pprint(triage_deps)
+    print(analyze_triage_input_sync(triage_input).model_dump_json(indent=2))
 
 
