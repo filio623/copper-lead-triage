@@ -2,11 +2,14 @@ from pydantic import (BaseModel, Field, SecretStr)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 from functools import lru_cache
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file = '.env',
+        env_file = PROJECT_ROOT / '.env',
         env_file_encoding = 'utf-8',
         extra="ignore",
     )

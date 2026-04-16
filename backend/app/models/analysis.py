@@ -59,13 +59,12 @@ class LeadAnalysisRecord(BaseModel):
     enrichment_result: Optional[EnrichmentResult] = None
     llm_analysis: Optional[LLMAnalysisResult] = None
     review_status: ReviewStatus = "pending"
-    processed_at: datetime = Field(default_factory=datetime.now(UTC))
-    updated_at: datetime = Field(default_factory=datetime.now(UTC))
+    processed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 class TriageInput(BaseModel):
     normalized_lead: NormalizedLead
     rule_score: RuleScoreResult
     enrichment_result: Optional[EnrichmentResult] = None
-
 
 
