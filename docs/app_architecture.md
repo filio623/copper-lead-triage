@@ -1,8 +1,8 @@
 # Lead Scoring & Triage Engine — App Architecture
 
 **Created:** 2026-04-09
-**Modified:** 2026-04-14
-**Version:** 2.4
+**Modified:** 2026-04-15
+**Version:** 2.6
 
 **Project:** Step and Repeat LA — AI CRM Applications
 
@@ -26,7 +26,7 @@ The long-term product can still grow into a Copper embedded app and later into d
 
 ## Current Implementation Checkpoint
 
-As of 2026-04-14, the backend work has moved beyond the original local-script checkpoint but is still not yet a full service.
+As of 2026-04-15, the backend work has moved beyond the original local-script checkpoint but is still not yet a full service.
 
 Implemented now:
 
@@ -38,24 +38,26 @@ Implemented now:
 - `backend/app/models/analysis.py` now includes a first `TriageInput` model for the planned Phase 3 triage task contract
 - `tests/test_rules.py` covers the first-pass deterministic scoring contract
 - `backend/app/services/scoring.py` still contains the first `PydanticAI` triage prototype using typed `LLMAnalysisResult` output
-- `backend/app/services/triage.py` now contains an early local proof-of-concept triage skeleton for Phase 3 experimentation
-- the current local triage proof-of-concept still needs to be turned into a reusable service boundary and rewired to the target architecture
+- `backend/app/services/triage.py` now contains the first reusable Phase 3 triage service boundary with a typed entrypoint and prompt/deps helpers
+- `backend/app/clients/llm.py` now contains the thin triage model factory and basic model metadata helper
+- `tests/test_triage_contracts.py` now covers triage gating, prompt construction, deps shaping, and service metadata
+- `backend/app/models/db.py` now defines the initial SQLAlchemy ORM models, engine/session helpers, typed persistence models, and local database URL handling
+- `backend/app/repositories/analyses.py`, `runs.py`, and `reviews.py` now implement the first persistence repositories
+- `tests/test_repositories.py` now covers schema creation plus repository round-trips for runs, analyses, and reviews
 
 Not implemented yet:
 
 - enrichment tools and external research
-- persistence of lead analyses or run history
 - orchestration in `pipeline.py`
 - FastAPI endpoints
 - review queue UI
-- a reusable triage service entrypoint that cleanly consumes `TriageInput`
-- prompt/version/model metadata capture in the planned service architecture
-- contract tests for the Phase 3 triage task
-- migration of the current triage proof-of-concept into the planned `triage.py` + `pipeline.py` structure
+- full pipeline orchestration across normalize, rules, triage, and persistence
+- API and script wiring over the new repositories and triage service
+- richer prompt/model metadata capture on saved analysis rows as the pipeline is completed
 
-This means the current project state is best understood as a partially split backend prototype: normalization and first-pass rules now exist as separate layers, while triage, persistence, and orchestration still need to be consolidated into the target service architecture.
+This means the current project state is best understood as a partially assembled backend service: normalization, rules, triage, and first-pass persistence now exist as separate layers, while orchestration, review workflow, and API exposure still need to be consolidated into the target service architecture.
 
-As of 2026-04-14, the recommended next step is to keep the first agent narrowly scoped to triage judgment and optional draft generation, keep online research as a later separate enrichment task, and formalize the Phase 3 service contract in `backend/app/services/triage.py` and `backend/app/clients/llm.py` before moving on to orchestration.
+As of 2026-04-15, the recommended next step is to keep the first agent narrowly scoped to triage judgment and optional draft generation, keep online research as a later separate enrichment task, and move next into `backend/app/services/pipeline.py` so the existing normalize, rules, triage, and persistence layers can be exercised together.
 
 ---
 
@@ -568,6 +570,8 @@ Because future complexity is not a reason to front-load present complexity. The 
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 2.6     | 2026-04-15 | Switched the new Phase 4 persistence layer to SQLAlchemy while keeping SQLite as the initial local backing database |
+| 2.5     | 2026-04-15 | Recorded the reusable triage service milestone and the first implemented SQLite persistence layer with repository tests |
 | 2.4     | 2026-04-14 | Recorded the Phase 3 triage-task start, including the first `TriageInput` model and local triage proof-of-concept status |
 | 2.3     | 2026-04-13 | Updated the implementation checkpoint to include representative sampling, the Phase 0 rubric, and the first deterministic `rules.py` layer |
 | 2.2     | 2026-04-13 | Clarified the app job-to-be-done, documented the single-agent-first `PydanticAI` strategy, and added guidance for later LLM task expansion without defaulting to multi-agent orchestration |

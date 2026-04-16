@@ -17,6 +17,16 @@ class Settings(BaseSettings):
     app_name: str = "copper-lead-triage"
     version: str = "0.1.0"
     description: str = "An addon to copper CRM which fills out missing data for leads"
+    database_path: Path = Field(
+        default=PROJECT_ROOT / "data" / "lead_triage.sqlite3",
+        alias="DATABASE_PATH",
+        description="Local SQLite database path for saved analysis data",
+    )
+    database_url: str = Field(
+        default=f"sqlite:///{(PROJECT_ROOT / 'data' / 'lead_triage.sqlite3').as_posix()}",
+        alias="DATABASE_URL",
+        description="SQLAlchemy database URL for saved analysis data",
+    )
 
 # Copper CRM API credentials
     copper_api_key: SecretStr = Field(description="API Key for Copper CRM")

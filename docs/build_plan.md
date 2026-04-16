@@ -1,8 +1,8 @@
 # Lead Triage Engine — Build Plan
 
 **Created:** 2026-04-13
-**Modified:** 2026-04-14
-**Version:** 1.3
+**Modified:** 2026-04-15
+**Version:** 1.5
 
 **Status:** Active working plan
 **Related Docs:** [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md), [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md), [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md)
@@ -31,7 +31,6 @@ Not in place yet:
 
 - durable rule scoring output
 - enrichment adapters
-- persistence and run tracking
 - orchestration pipeline
 - API routes
 - review workflow
@@ -177,6 +176,12 @@ Near-term implementation notes on 2026-04-14:
 - move from the current local proof-of-concept harness to a reusable service entrypoint in `backend/app/services/triage.py`
 - add contract tests for input shaping, structured output validation, and triage gating behavior before moving on to pipeline orchestration
 
+Current status on 2026-04-15:
+
+- `backend/app/services/triage.py` now exposes a reusable triage service entrypoint around the agent task
+- `backend/app/clients/llm.py` now contains the thin model factory for the triage task
+- `tests/test_triage_contracts.py` now covers triage gating, prompt building, deps shaping, and service metadata
+
 ### Phase 4 — Persistence
 
 Goal:
@@ -184,7 +189,7 @@ Store raw inputs, analysis outputs, run metadata, and review state.
 
 Deliverables:
 
-- SQLite schema
+- SQLAlchemy-backed SQLite schema
 - repository layer
 - database initialization path
 - saved lead analyses and batch runs
@@ -201,6 +206,15 @@ Exit criteria:
 
 - a lead analysis can be saved and loaded
 - a batch run can be tracked over time
+
+Current status on 2026-04-15:
+
+- `backend/app/models/db.py` now defines the initial SQLAlchemy ORM models, engine/session helpers, and typed persistence models
+- `backend/app/repositories/analyses.py` now saves lead snapshots and lead analyses and can fetch the latest stored analysis
+- `backend/app/repositories/runs.py` now creates, updates, and fetches batch runs
+- `backend/app/repositories/reviews.py` now stores review history and mirrors the effective review status back onto the saved analysis row
+- `tests/test_repositories.py` now covers schema creation, run persistence, analysis persistence, review persistence, and JSON/timestamp round-tripping
+- the next step after persistence is to wire these pieces together in `backend/app/services/pipeline.py`
 
 ### Phase 5 — Per-Lead Pipeline
 
@@ -327,6 +341,8 @@ Exit criteria:
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.5     | 2026-04-15 | Switched the new Phase 4 persistence layer from raw `sqlite3` to SQLAlchemy while keeping SQLite as the initial backing database |
+| 1.4     | 2026-04-15 | Recorded the reusable Phase 3 triage service milestone and the first implemented SQLite persistence layer for Phase 4 |
 | 1.3     | 2026-04-14 | Recorded the Phase 3 triage-task start, the new `TriageInput` contract, and the early local triage proof-of-concept status |
 | 1.2     | 2026-04-13 | Recorded the review-sample builder and the first implemented deterministic rules milestone |
 | 1.1     | 2026-04-13 | Added the first-pass Phase 0 rubric as an input to the build plan and noted current Phase 0 progress |

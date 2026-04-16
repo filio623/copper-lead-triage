@@ -1,6 +1,10 @@
-"""TODO package for persistence repositories.
+from backend.app.repositories.analyses import AnalysesRepository
+from backend.app.repositories.reviews import ReviewsRepository
+from backend.app.repositories.runs import RunsRepository
 
-Goal:
-- keep SQL and storage logic out of service modules
-- give each stored concept a small, focused repository
-"""
+
+__all__ = [
+    "AnalysesRepository",
+    "ReviewsRepository",
+    "RunsRepository",
+]
