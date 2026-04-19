@@ -1,8 +1,8 @@
 # Docs Index
 
 **Created:** 2026-04-10
-**Modified:** 2026-04-13
-**Version:** 1.5
+**Modified:** 2026-04-19
+**Version:** 1.6
 
 ---
 
@@ -22,6 +22,7 @@ The active documents below should be treated as the current starting point. Arch
 | [build_plan.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/build_plan.md) | Step-by-step implementation checklist and target module map for building the app |
 | [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md) | Current CRM verification reference, live snapshot, and API verification methods |
 | [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md) | First-pass manual review rubric derived from the labeled Phase 0 lead sample |
+| [system_flow.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/system_flow.md) | Detailed visual and code-referenced flow map showing how the current backend modules work together |
 
 ---
 
@@ -48,6 +49,7 @@ The active documents below should be treated as the current starting point. Arch
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.6     | 2026-04-19 | Added the active system-flow document and refreshed the docs index for the new pipeline and batch milestones |
 | 1.5     | 2026-04-13 | Refreshed the active docs index after the Phase 0 rubric and deterministic rules milestone |
 | 1.4     | 2026-04-13 | Added the active Phase 0 review rubric document to the docs index |
 | 1.3     | 2026-04-13 | Added the active build-plan document to the docs index |

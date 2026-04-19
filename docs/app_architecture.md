@@ -1,8 +1,8 @@
 # Lead Scoring & Triage Engine — App Architecture
 
 **Created:** 2026-04-09
-**Modified:** 2026-04-18
-**Version:** 2.7
+**Modified:** 2026-04-19
+**Version:** 2.8
 
 **Project:** Step and Repeat LA — AI CRM Applications
 
@@ -46,19 +46,21 @@ Implemented now:
 - `tests/test_repositories.py` now covers schema creation plus repository round-trips for runs, analyses, and reviews
 - `backend/app/services/pipeline.py` now implements the first per-lead orchestration path across validation, normalization, rules, optional triage, and persistence
 - `tests/test_pipeline.py` now covers the first end-to-end pipeline contracts for triage skipped, triage used, and raw lead snapshot + analysis persistence
+- `backend/app/services/batch.py` now implements the first Phase 6 batch orchestration layer over the per-lead pipeline
+- `backend/scripts/run_sample.py` and `backend/scripts/run_bulk.py` now run saved sample and bulk batches through the service layer
+- `tests/test_batch.py` now covers duplicate handling, failure handling, and batch run counter updates
 
 Not implemented yet:
 
 - enrichment tools and external research
 - FastAPI endpoints
 - review queue UI
-- batch processing over the new per-lead pipeline
-- API and script wiring over the new pipeline and repositories
+- API wiring over the new pipeline and repositories
 - richer prompt/model metadata capture on saved analysis rows as the pipeline is completed
 
-This means the current project state is best understood as a usable backend core: normalization, rules, triage, persistence, and a first per-lead pipeline now exist, while batch workflow, review workflow, and API exposure still need to be consolidated into the target service architecture.
+This means the current project state is best understood as a usable backend workflow core: normalization, rules, triage, persistence, per-lead orchestration, and first-pass batch execution now exist, while review workflow and API exposure still need to be consolidated into the target service architecture.
 
-As of 2026-04-18, the recommended next step is to keep the first agent narrowly scoped to triage judgment and optional draft generation, keep online research as a later separate enrichment task, and move next into Phase 6 batch support so the new per-lead pipeline can be run across representative samples and larger lead sets.
+As of 2026-04-19, the recommended next step is to keep the first agent narrowly scoped to triage judgment and optional draft generation, keep online research as a later separate enrichment task, and move next into Phase 7 review workflow support so saved analyses can be inspected, exported, and annotated systematically.
 
 ---
 
@@ -571,6 +573,7 @@ Because future complexity is not a reason to front-load present complexity. The 
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 2.8     | 2026-04-19 | Recorded the first implemented Phase 6 batch services and runner scripts and moved the next milestone to review workflow support |
 | 2.7     | 2026-04-18 | Recorded the first implemented per-lead pipeline and set the next milestone as Phase 6 batch processing over the new pipeline |
 | 2.6     | 2026-04-15 | Switched the new Phase 4 persistence layer to SQLAlchemy while keeping SQLite as the initial local backing database |
 | 2.5     | 2026-04-15 | Recorded the reusable triage service milestone and the first implemented SQLite persistence layer with repository tests |

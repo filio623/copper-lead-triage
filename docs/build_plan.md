@@ -1,11 +1,11 @@
 # Lead Triage Engine — Build Plan
 
 **Created:** 2026-04-13
-**Modified:** 2026-04-18
-**Version:** 1.6
+**Modified:** 2026-04-19
+**Version:** 1.7
 
 **Status:** Active working plan
-**Related Docs:** [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md), [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md), [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md)
+**Related Docs:** [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md), [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md), [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md), [system_flow.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/system_flow.md)
 
 ---
 
@@ -270,6 +270,15 @@ Exit criteria:
 - a sample batch can be run and saved
 - failures are visible without stopping the whole run
 
+Current status on 2026-04-19:
+
+- `backend/app/services/batch.py` now creates batch runs, processes raw and normalized lead batches, skips duplicate lead IDs inside a run, and keeps going after per-lead failures
+- `backend/scripts/run_sample.py` now runs a local sample batch through the new per-lead pipeline and prints a stored run summary
+- `backend/scripts/run_bulk.py` now runs a larger batch through the same service path with `run_type="bulk"`
+- `tests/test_batch.py` now covers duplicate handling, failure handling, and run-counter updates
+- a local sample batch has been executed successfully through the full service path
+- the next step after batch processing is Phase 7 review workflow support and exports over the saved analysis results
+
 ### Phase 7 — Review Workflow
 
 Goal:
@@ -337,7 +346,7 @@ Exit criteria:
 - [x] Phase 3 complete
 - [x] Phase 4 complete
 - [x] Phase 5 complete
-- [ ] Phase 6 complete
+- [x] Phase 6 complete
 - [ ] Phase 7 complete
 - [ ] Phase 8 complete
 
@@ -347,6 +356,7 @@ Exit criteria:
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.7     | 2026-04-19 | Recorded the first implemented Phase 6 batch services and scripts, marked Phase 6 complete, and linked the new system-flow document |
 | 1.6     | 2026-04-18 | Recorded the first implemented per-lead pipeline and marked Phases 2 through 5 complete enough to move into Phase 6 batch processing |
 | 1.5     | 2026-04-15 | Switched the new Phase 4 persistence layer from raw `sqlite3` to SQLAlchemy while keeping SQLite as the initial backing database |
 | 1.4     | 2026-04-15 | Recorded the reusable Phase 3 triage service milestone and the first implemented SQLite persistence layer for Phase 4 |
