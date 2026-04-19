@@ -1,8 +1,8 @@
 # Lead Scoring & Triage Engine — App Architecture
 
 **Created:** 2026-04-09
-**Modified:** 2026-04-15
-**Version:** 2.6
+**Modified:** 2026-04-18
+**Version:** 2.7
 
 **Project:** Step and Repeat LA — AI CRM Applications
 
@@ -26,7 +26,7 @@ The long-term product can still grow into a Copper embedded app and later into d
 
 ## Current Implementation Checkpoint
 
-As of 2026-04-15, the backend work has moved beyond the original local-script checkpoint but is still not yet a full service.
+As of 2026-04-18, the backend work has moved beyond the original local-script checkpoint but is still not yet a full service.
 
 Implemented now:
 
@@ -44,20 +44,21 @@ Implemented now:
 - `backend/app/models/db.py` now defines the initial SQLAlchemy ORM models, engine/session helpers, typed persistence models, and local database URL handling
 - `backend/app/repositories/analyses.py`, `runs.py`, and `reviews.py` now implement the first persistence repositories
 - `tests/test_repositories.py` now covers schema creation plus repository round-trips for runs, analyses, and reviews
+- `backend/app/services/pipeline.py` now implements the first per-lead orchestration path across validation, normalization, rules, optional triage, and persistence
+- `tests/test_pipeline.py` now covers the first end-to-end pipeline contracts for triage skipped, triage used, and raw lead snapshot + analysis persistence
 
 Not implemented yet:
 
 - enrichment tools and external research
-- orchestration in `pipeline.py`
 - FastAPI endpoints
 - review queue UI
-- full pipeline orchestration across normalize, rules, triage, and persistence
-- API and script wiring over the new repositories and triage service
+- batch processing over the new per-lead pipeline
+- API and script wiring over the new pipeline and repositories
 - richer prompt/model metadata capture on saved analysis rows as the pipeline is completed
 
-This means the current project state is best understood as a partially assembled backend service: normalization, rules, triage, and first-pass persistence now exist as separate layers, while orchestration, review workflow, and API exposure still need to be consolidated into the target service architecture.
+This means the current project state is best understood as a usable backend core: normalization, rules, triage, persistence, and a first per-lead pipeline now exist, while batch workflow, review workflow, and API exposure still need to be consolidated into the target service architecture.
 
-As of 2026-04-15, the recommended next step is to keep the first agent narrowly scoped to triage judgment and optional draft generation, keep online research as a later separate enrichment task, and move next into `backend/app/services/pipeline.py` so the existing normalize, rules, triage, and persistence layers can be exercised together.
+As of 2026-04-18, the recommended next step is to keep the first agent narrowly scoped to triage judgment and optional draft generation, keep online research as a later separate enrichment task, and move next into Phase 6 batch support so the new per-lead pipeline can be run across representative samples and larger lead sets.
 
 ---
 
@@ -570,6 +571,7 @@ Because future complexity is not a reason to front-load present complexity. The 
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 2.7     | 2026-04-18 | Recorded the first implemented per-lead pipeline and set the next milestone as Phase 6 batch processing over the new pipeline |
 | 2.6     | 2026-04-15 | Switched the new Phase 4 persistence layer to SQLAlchemy while keeping SQLite as the initial local backing database |
 | 2.5     | 2026-04-15 | Recorded the reusable triage service milestone and the first implemented SQLite persistence layer with repository tests |
 | 2.4     | 2026-04-14 | Recorded the Phase 3 triage-task start, including the first `TriageInput` model and local triage proof-of-concept status |

@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -26,7 +26,7 @@ class AnalysesRepository:
     def save_snapshot(
         self,
         copper_lead_id: int,
-        raw_payload: dict[str, Any],
+        raw_payload: Dict[str, Any],
         snapshot_id: Optional[str] = None,
     ) -> LeadSnapshotRecord:
         # Saving raw snapshots separately preserves the original Copper payload

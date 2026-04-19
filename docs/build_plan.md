@@ -1,8 +1,8 @@
 # Lead Triage Engine — Build Plan
 
 **Created:** 2026-04-13
-**Modified:** 2026-04-15
-**Version:** 1.5
+**Modified:** 2026-04-18
+**Version:** 1.6
 
 **Status:** Active working plan
 **Related Docs:** [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md), [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md), [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md)
@@ -31,7 +31,6 @@ Not in place yet:
 
 - durable rule scoring output
 - enrichment adapters
-- orchestration pipeline
 - API routes
 - review workflow
 
@@ -240,6 +239,13 @@ Exit criteria:
 
 - one lead can be processed end-to-end through a single service entrypoint
 
+Current status on 2026-04-18:
+
+- `backend/app/services/pipeline.py` now orchestrates validation, normalization, rules, optional triage, snapshot persistence, and final analysis persistence for a single lead
+- `tests/test_pipeline.py` now covers the first three pipeline contracts: triage skipped, triage used, and raw lead snapshot + analysis persistence
+- the current pipeline intentionally keeps scope narrow and does not yet include enrichment, retries, or review workflow logic
+- the next step after the per-lead pipeline is to build Phase 6 batch support in `backend/app/services/batch.py`, `backend/scripts/run_sample.py`, and `backend/scripts/run_bulk.py`
+
 ### Phase 6 — Batch Runs
 
 Goal:
@@ -327,10 +333,10 @@ Exit criteria:
 
 - [ ] Phase 0 complete
 - [ ] Phase 1 complete
-- [ ] Phase 2 complete
-- [ ] Phase 3 complete
-- [ ] Phase 4 complete
-- [ ] Phase 5 complete
+- [x] Phase 2 complete
+- [x] Phase 3 complete
+- [x] Phase 4 complete
+- [x] Phase 5 complete
 - [ ] Phase 6 complete
 - [ ] Phase 7 complete
 - [ ] Phase 8 complete
@@ -341,6 +347,7 @@ Exit criteria:
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.6     | 2026-04-18 | Recorded the first implemented per-lead pipeline and marked Phases 2 through 5 complete enough to move into Phase 6 batch processing |
 | 1.5     | 2026-04-15 | Switched the new Phase 4 persistence layer from raw `sqlite3` to SQLAlchemy while keeping SQLite as the initial backing database |
 | 1.4     | 2026-04-15 | Recorded the reusable Phase 3 triage service milestone and the first implemented SQLite persistence layer for Phase 4 |
 | 1.3     | 2026-04-14 | Recorded the Phase 3 triage-task start, the new `TriageInput` contract, and the early local triage proof-of-concept status |

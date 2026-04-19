@@ -22,7 +22,7 @@ headers = {
 }
 
 
-def get_leads_page(page_size: int = 1, page_number: int = 1, headers: Dict[str, str] = headers) -> List[Dict]:
+def get_leads(page_size: int = 1, page_number: int = 1, headers: Dict[str, str] = headers) -> List[Dict]:
     try:
         data = {
             "page_size": page_size,
@@ -72,7 +72,7 @@ def return_normalized_leads(page_number: int = 1, page_size: int = 1, pages: int
     
     if get_all:
         while True:
-            leads_data = get_leads_page(page_number=current_page, page_size=page_size)
+            leads_data = get_leads(page_number=current_page, page_size=page_size)
             if not leads_data:
                 break
             
@@ -84,7 +84,7 @@ def return_normalized_leads(page_number: int = 1, page_size: int = 1, pages: int
             current_page += 1
     else:
         for _ in range(pages):
-            leads_data = get_leads_page(page_number=current_page, page_size=page_size)
+            leads_data = get_leads(page_number=current_page, page_size=page_size)
             if not leads_data:
                 break
                 
