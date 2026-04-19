@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from typing import Any, Optional, Dict
 
 from sqlalchemy import select
@@ -15,7 +16,6 @@ from backend.app.models.db import (
     lead_analysis_to_stored_record,
     lead_snapshot_orm_to_model,
     serialize_datetime,
-    utc_now,
 )
 
 
@@ -35,7 +35,7 @@ class AnalysesRepository:
             id=snapshot_id or generate_id(),
             copper_lead_id=copper_lead_id,
             raw_payload_json=dumps_json(raw_payload),
-            fetched_at=serialize_datetime(utc_now()) or "",
+            fetched_at=serialize_datetime(datetime.now(UTC)) or "",
         )
         self.session.add(record)
         self.session.commit()
@@ -111,5 +111,5 @@ class AnalysesRepository:
             raise ValueError(f"Analysis {analysis_id} does not exist.")
 
         row.review_status = review_status
-        row.updated_at = serialize_datetime(utc_now()) or ""
+        row.updated_at = serialize_datetime(datetime.now(UTC)) or ""
         self.session.commit()

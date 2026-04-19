@@ -147,10 +147,6 @@ Index("idx_lead_analyses_batch_run_id", LeadAnalysisORM.batch_run_id)
 Index("idx_review_decisions_analysis_id", ReviewDecisionORM.analysis_id)
 
 
-def utc_now() -> datetime:
-    return datetime.now(UTC)
-
-
 def generate_id() -> str:
     return str(uuid.uuid4())
 
@@ -163,7 +159,7 @@ def serialize_datetime(value: datetime | None) -> str | None:
     return value.astimezone(UTC).isoformat()
 
 
-def deserialize_datetime(value: str | None) -> datetime | None:
+def deserialize_datetime(value: Optional[str] = None) -> datetime | None:
     if value is None:
         return None
     return datetime.fromisoformat(value)
@@ -173,7 +169,7 @@ def dumps_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=True, sort_keys=True)
 
 
-def loads_json(value: str | None) -> Any:
+def loads_json(value: Optional[str] = None) -> Any:
     if value is None:
         return None
     return json.loads(value)
@@ -247,10 +243,10 @@ def batch_run_orm_to_model(row: BatchRunORM) -> BatchRun:
         processed_count=row.processed_count,
         success_count=row.success_count,
         failure_count=row.failure_count,
-        started_at=deserialize_datetime(row.started_at) or utc_now(),
+        started_at=deserialize_datetime(row.started_at) or datetime.now(UTC),
         completed_at=deserialize_datetime(row.completed_at),
-        created_at=deserialize_datetime(row.created_at) or utc_now(),
-        updated_at=deserialize_datetime(row.updated_at) or utc_now(),
+        created_at=deserialize_datetime(row.created_at) or datetime.now(UTC),
+        updated_at=deserialize_datetime(row.updated_at) or datetime.now(UTC),
     )
 
 
@@ -259,7 +255,7 @@ def lead_snapshot_orm_to_model(row: LeadSnapshotORM) -> LeadSnapshotRecord:
         snapshot_id=row.id,
         copper_lead_id=row.copper_lead_id,
         raw_payload=loads_json(row.raw_payload_json) or {},
-        fetched_at=deserialize_datetime(row.fetched_at) or utc_now(),
+        fetched_at=deserialize_datetime(row.fetched_at) or datetime.now(UTC),
     )
 
 
@@ -284,8 +280,8 @@ def lead_analysis_orm_to_model(row: LeadAnalysisORM) -> StoredLeadAnalysis:
         llm_model=row.llm_model,
         llm_prompt_version=row.llm_prompt_version,
         review_status=row.review_status,  # type: ignore[arg-type]
-        processed_at=deserialize_datetime(row.processed_at) or utc_now(),
-        updated_at=deserialize_datetime(row.updated_at) or utc_now(),
+        processed_at=deserialize_datetime(row.processed_at) or datetime.now(UTC),
+        updated_at=deserialize_datetime(row.updated_at) or datetime.now(UTC),
     )
 
 
@@ -295,5 +291,5 @@ def review_decision_orm_to_model(row: ReviewDecisionORM) -> ReviewDecision:
         analysis_id=row.analysis_id,
         decision=row.decision,  # type: ignore[arg-type]
         notes=row.notes,
-        decided_at=deserialize_datetime(row.decided_at) or utc_now(),
+        decided_at=deserialize_datetime(row.decided_at) or datetime.now(UTC),
     )

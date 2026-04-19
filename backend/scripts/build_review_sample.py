@@ -19,7 +19,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -45,7 +45,7 @@ class LeadFeatures:
     interaction_count: int
 
 
-def _clean_text(value: str | None) -> str | None:
+def _clean_text(value: Optional[str] = None) -> str | None:
     if value is None:
         return None
 

@@ -64,7 +64,7 @@ async def process_normalized_lead(
 async def process_raw_lead(
       raw_lead: dict,
       deps: PipelineDeps,
-      batch_run_id: str | None = None,
+      batch_run_id: Optional[str] = None,
   ) -> StoredLeadAnalysis:
     lead = validate_lead(raw_lead)
     normalized_lead = normalize_lead(lead)
@@ -80,3 +80,33 @@ async def process_raw_lead(
     )
     return analysis
 
+if __name__ == "__main__":
+    import asyncio
+    from backend.app.models.db import create_database_engine, create_session_factory, initialize_database
+    from backend.app.repositories.analyses import AnalysesRepository
+    from backend.app.services.normalize import get_leads
+    from pprint import pprint
+
+    engine = create_database_engine()
+    initialize_database(engine)
+    session_factory = create_session_factory(engine=engine)
+    session = session_factory()
+
+    deps = PipelineDeps(
+        analyses_repository=AnalysesRepository(session)
+    )
+
+    try:
+        raw_leads = get_leads(page_size=1, page_number=1)
+        if not raw_leads:
+            raise ValueError("No leads returned")
+    except Exception as e:
+        print(f"Exception: {e}")
+    
+
+    result = asyncio.run(process_raw_lead(raw_leads[0], deps))
+
+    pprint(result.model_dump())
+
+
+    

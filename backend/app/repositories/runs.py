@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -11,7 +11,6 @@ from backend.app.models.db import (
     batch_run_orm_to_model,
     generate_id,
     serialize_datetime,
-    utc_now,
 )
 
 
@@ -28,7 +27,7 @@ class RunsRepository:
     ) -> BatchRun:
         # Creating a batch run first gives later pipeline code a stable parent
         # record to attach per-lead analyses to.
-        now = utc_now()
+        now = datetime.now(UTC)
         row = BatchRunORM(
             id=run_id or generate_id(),
             run_type=run_type,
@@ -83,7 +82,7 @@ class RunsRepository:
         row.success_count = success_count if success_count is not None else row.success_count
         row.failure_count = failure_count if failure_count is not None else row.failure_count
         row.completed_at = serialize_datetime(completed_at) if completed_at is not None else row.completed_at
-        row.updated_at = serialize_datetime(utc_now()) or ""
+        row.updated_at = serialize_datetime(datetime.now(UTC)) or ""
 
         self.session.commit()
         return batch_run_orm_to_model(row)

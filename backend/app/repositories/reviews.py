@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -9,7 +11,6 @@ from backend.app.models.db import (
     generate_id,
     review_decision_orm_to_model,
     serialize_datetime,
-    utc_now,
 )
 
 
@@ -35,14 +36,14 @@ class ReviewsRepository:
             analysis_id=analysis_id,
             decision=decision,
             notes=notes,
-            decided_at=serialize_datetime(utc_now()) or "",
+            decided_at=serialize_datetime(datetime.now(UTC)) or "",
         )
         self.session.add(row)
 
         # This mirrors the latest review state back onto the analysis row so
         # summary queries do not have to reconstruct it from history each time.
         analysis_row.review_status = decision
-        analysis_row.updated_at = serialize_datetime(utc_now()) or ""
+        analysis_row.updated_at = serialize_datetime(datetime.now(UTC)) or ""
 
         self.session.commit()
         return review_decision_orm_to_model(row)
