@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from backend.app.models.db import BatchRun, StoredLeadAnalysis
 from backend.app.repositories.runs import RunsRepository
@@ -20,7 +20,7 @@ class BatchDeps:
 @dataclass
 class BatchFailure:
     lead_index: int
-    copper_lead_id: Optional[int] = None
+    copper_lead_id: int | None = None
     error_message: str = ""
 
 

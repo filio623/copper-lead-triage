@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from backend.app.models.analysis import RuleScoreResult
 from backend.app.models.lead import NormalizedLead
@@ -68,7 +67,7 @@ LOCAL_CITY_KEYWORDS = {
 }
 
 
-def _clean_text(value: Optional[str] = None) -> str | None:
+def _clean_text(value: str | None = None) -> str | None:
     if value is None:
         return None
 

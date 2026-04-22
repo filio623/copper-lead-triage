@@ -1,7 +1,6 @@
 import time
 from pprint import pprint
 import httpx
-from typing import Dict, List
 
 from backend.app.core.config import get_settings
 from backend.app.models.lead import LeadSnapshot, NormalizedLead
@@ -22,7 +21,7 @@ headers = {
 }
 
 
-def get_leads(page_size: int = 1, page_number: int = 1, headers: Dict[str, str] = headers) -> List[Dict]:
+def get_leads(page_size: int = 1, page_number: int = 1, headers: dict[str, str] = headers) -> list[dict]:
     try:
         data = {
             "page_size": page_size,
@@ -48,7 +47,7 @@ def get_leads(page_size: int = 1, page_number: int = 1, headers: Dict[str, str] 
         return []
 
 
-def validate_lead(lead_data: Dict) -> LeadSnapshot:
+def validate_lead(lead_data: dict) -> LeadSnapshot:
     validated = LeadSnapshot.model_validate(lead_data)
     return validated
 
@@ -66,7 +65,7 @@ def normalize_lead(lead_snapshot: LeadSnapshot) -> NormalizedLead:
     )
     return normalized
 
-def return_normalized_leads(page_number: int = 1, page_size: int = 1, pages: int = 1, get_all: bool = False) -> List[NormalizedLead]:
+def return_normalized_leads(page_number: int = 1, page_size: int = 1, pages: int = 1, get_all: bool = False) -> list[NormalizedLead]:
     normalized_leads = []
     current_page = page_number
     

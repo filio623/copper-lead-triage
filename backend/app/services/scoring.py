@@ -1,7 +1,6 @@
 import asyncio
 from dataclasses import dataclass
 import re
-from typing import Optional
 from pprint import pprint
 import logfire
 
@@ -71,7 +70,7 @@ Lead data:
 """
 
 
-def _clean_text(value: Optional[str] = None) -> str | None:
+def _clean_text(value: str | None = None) -> str | None:
     if value is None:
         return None
 
@@ -79,7 +78,7 @@ def _clean_text(value: Optional[str] = None) -> str | None:
     return cleaned or None
 
 
-def _is_placeholder(value: Optional[str] = None) -> bool:
+def _is_placeholder(value: str | None = None) -> bool:
     cleaned = _clean_text(value)
     if cleaned is None:
         return False

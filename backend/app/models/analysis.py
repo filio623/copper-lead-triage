@@ -1,5 +1,5 @@
 from datetime import datetime, UTC
-from typing import List, Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -27,24 +27,24 @@ class RuleScoreResult(BaseModel):
 
 
 class EnrichmentResult(BaseModel):
-    company_active: Optional[bool] = None
-    event_related: Optional[bool] = None
-    fit_for_step_and_repeat_la: Optional[bool] = None
-    summary: Optional[str] = None
+    company_active: bool | None = None
+    event_related: bool | None = None
+    fit_for_step_and_repeat_la: bool | None = None
+    summary: str | None = None
     fit_signals: list[str] = Field(default_factory=list)
     red_flags: list[str] = Field(default_factory=list)
     evidence: list[dict] = Field(default_factory=list)
-    searched_at: Optional[datetime] = None
+    searched_at: datetime | None = None
 
 
 class LLMAnalysisResult(BaseModel):
     priority_tier: PriorityTier = "medium"
     industry_fit: IndustryFit = "unknown"
-    reasoning_summary: Optional[str] = None
-    confidence: Optional[float] = None
+    reasoning_summary: str | None = None
+    confidence: float | None = None
     caution_notes: list[str] = Field(default_factory=list)
-    outreach_subject: Optional[str] = None
-    outreach_body: Optional[str] = None
+    outreach_subject: str | None = None
+    outreach_body: str | None = None
     personalization_basis: list[str] = Field(default_factory=list)
     draft_warnings: list[str] = Field(default_factory=list)
     usable_without_rewrite: bool = False
@@ -52,12 +52,12 @@ class LLMAnalysisResult(BaseModel):
 
 class LeadAnalysisRecord(BaseModel):
     copper_lead_id: int
-    batch_run_id: Optional[str] = None
-    raw_snapshot_id: Optional[str] = None
+    batch_run_id: str | None = None
+    raw_snapshot_id: str | None = None
     normalized_lead: NormalizedLead
     rule_score: RuleScoreResult
-    enrichment_result: Optional[EnrichmentResult] = None
-    llm_analysis: Optional[LLMAnalysisResult] = None
+    enrichment_result: EnrichmentResult | None = None
+    llm_analysis: LLMAnalysisResult | None = None
     review_status: ReviewStatus = "pending"
     processed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -65,6 +65,6 @@ class LeadAnalysisRecord(BaseModel):
 class TriageInput(BaseModel):
     normalized_lead: NormalizedLead
     rule_score: RuleScoreResult
-    enrichment_result: Optional[EnrichmentResult] = None
+    enrichment_result: EnrichmentResult | None = None
 
 

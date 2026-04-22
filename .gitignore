@@ -39,3 +39,5 @@ dates.txt
 *.db
 
 verify_script.py
+
+.agents

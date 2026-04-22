@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from backend.app.services.normalize import validate_lead, normalize_lead
 from backend.app.services.rules import score_lead, should_send_to_llm
@@ -18,8 +17,8 @@ class PipelineDeps:
 def build_lead_analysis_record(
       normalized_lead: NormalizedLead,
       rule_score: RuleScoreResult,
-      batch_run_id: Optional[str] = None,
-      raw_snapshot_id: Optional[str] = None) -> LeadAnalysisRecord:
+      batch_run_id: str | None = None,
+      raw_snapshot_id: str | None = None) -> LeadAnalysisRecord:
     return LeadAnalysisRecord(
         copper_lead_id=normalized_lead.copper_lead_id,
         batch_run_id=batch_run_id,
@@ -41,8 +40,8 @@ def build_triage_input(record: LeadAnalysisRecord) -> TriageInput:
 async def process_normalized_lead(
         normalized_lead: NormalizedLead,
         deps: PipelineDeps,
-        batch_run_id: Optional[str] = None,
-        raw_snapshot_id: Optional[str] = None) -> StoredLeadAnalysis:
+        batch_run_id: str | None = None,
+        raw_snapshot_id: str | None = None) -> StoredLeadAnalysis:
 
     score = score_lead(normalized_lead)
 
@@ -64,7 +63,7 @@ async def process_normalized_lead(
 async def process_raw_lead(
       raw_lead: dict,
       deps: PipelineDeps,
-      batch_run_id: Optional[str] = None,
+      batch_run_id: str | None = None,
   ) -> StoredLeadAnalysis:
     lead = validate_lead(raw_lead)
     normalized_lead = normalize_lead(lead)

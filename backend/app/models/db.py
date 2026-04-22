@@ -2,7 +2,7 @@ import json
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 from sqlalchemy import ForeignKey, Index, Integer, String, Text, create_engine
@@ -33,7 +33,7 @@ class BatchRun(BaseModel):
     success_count: int = 0
     failure_count: int = 0
     started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
@@ -48,15 +48,15 @@ class LeadSnapshotRecord(BaseModel):
 class StoredLeadAnalysis(BaseModel):
     analysis_id: str
     copper_lead_id: int
-    batch_run_id: Optional[str] = None
-    raw_snapshot_id: Optional[str] = None
+    batch_run_id: str | None = None
+    raw_snapshot_id: str | None = None
     normalized_lead: NormalizedLead
     rule_score: RuleScoreResult
-    enrichment_result: Optional[EnrichmentResult] = None
-    llm_analysis: Optional[LLMAnalysisResult] = None
-    llm_provider: Optional[str] = None
-    llm_model: Optional[str] = None
-    llm_prompt_version: Optional[str] = None
+    enrichment_result: EnrichmentResult | None = None
+    llm_analysis: LLMAnalysisResult | None = None
+    llm_provider: str | None = None
+    llm_model: str | None = None
+    llm_prompt_version: str | None = None
     review_status: ReviewStatus = "pending"
     processed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -66,7 +66,7 @@ class ReviewDecision(BaseModel):
     review_id: str
     analysis_id: str
     decision: ReviewStatus
-    notes: Optional[str] = None
+    notes: str | None = None
     decided_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -159,7 +159,7 @@ def serialize_datetime(value: datetime | None) -> str | None:
     return value.astimezone(UTC).isoformat()
 
 
-def deserialize_datetime(value: Optional[str] = None) -> datetime | None:
+def deserialize_datetime(value: str | None = None) -> datetime | None:
     if value is None:
         return None
     return datetime.fromisoformat(value)
@@ -169,7 +169,7 @@ def dumps_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=True, sort_keys=True)
 
 
-def loads_json(value: Optional[str] = None) -> Any:
+def loads_json(value: str | None = None) -> Any:
     if value is None:
         return None
     return json.loads(value)
