@@ -3,9 +3,8 @@ from typing import Any
 
 from backend.app.models.analysis import ReviewStatus
 from backend.app.models.db import ReviewDecision, StoredLeadAnalysis
-from backend.app.repositories.reviews import ReviewsRepository
 from backend.app.repositories.analyses import AnalysesRepository
-
+from backend.app.repositories.reviews import ReviewsRepository
 
 
 @dataclass
@@ -28,7 +27,8 @@ def build_review_row(analysis: StoredLeadAnalysis) -> dict[str, Any]:
         "batch_run_id": analysis.batch_run_id,
     }
 
-def get_batch_review_rows(batch_run_id: str, deps: ReviewDeps) ->list[dict[str, Any]]:
+
+def get_batch_review_rows(batch_run_id: str, deps: ReviewDeps) -> list[dict[str, Any]]:
     analyses = deps.analyses_repository.list_analyses_for_run(batch_run_id)
     review_rows = []
     for analysis in analyses:
@@ -36,13 +36,12 @@ def get_batch_review_rows(batch_run_id: str, deps: ReviewDeps) ->list[dict[str, 
     return review_rows
 
 
-
 def record_review_decision(
-        analysis_id: str,
-        decision: ReviewStatus,
-        deps: ReviewDeps,
-        notes: str | None = None
-) ->ReviewDecision:
+    analysis_id: str,
+    decision: ReviewStatus,
+    deps: ReviewDeps,
+    notes: str | None = None,
+) -> ReviewDecision:
     return deps.reviews_repository.create_review_decision(
         analysis_id=analysis_id,
         decision=decision,
@@ -50,7 +49,5 @@ def record_review_decision(
     )
 
 
-
-def get_review_history(analysis_id: str, deps:ReviewDeps) -> list[ReviewDecision]:
+def get_review_history(analysis_id: str, deps: ReviewDeps) -> list[ReviewDecision]:
     return deps.reviews_repository.get_review_history(analysis_id=analysis_id)
-
