@@ -1,8 +1,8 @@
 # Lead Triage Engine — System Flow
 
 **Created:** 2026-04-19
-**Modified:** 2026-04-19
-**Version:** 1.0
+**Modified:** 2026-04-27
+**Version:** 1.1
 
 **Status:** Active implementation reference
 **Related Docs:** [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md), [build_plan.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/build_plan.md)
@@ -11,7 +11,7 @@
 
 ## Purpose
 
-This document shows how the current backend works end to end as of 2026-04-19. It is meant to make the functional flow visible across modules, services, repositories, and scripts.
+This document shows how the current backend works end to end as of 2026-04-27. It is meant to make the functional flow visible across modules, services, repositories, scripts, and the first FastAPI route wiring.
 
 Use this document when you want to answer questions like:
 
@@ -19,21 +19,24 @@ Use this document when you want to answer questions like:
 - when do rules run versus triage?
 - when does the database get written to?
 - how do batch runs call the per-lead pipeline?
+- how do review rows get produced and exposed through the API?
 - which file owns which step?
 
 ---
 
 ## Current Runtime Layers
 
-The codebase currently has five working backend layers:
+The codebase currently has seven working backend layers:
 
 1. input and normalization
 2. deterministic rules
 3. triage LLM task
 4. persistence
 5. per-lead and batch orchestration
+6. review workflow and export
+7. initial FastAPI shell and review route
 
-The API layer and review workflow are still later phases.
+The remaining API layer is still incomplete. Current API work covers app startup, dependency wiring, and the first review row route.
 
 ---
 
@@ -54,6 +57,9 @@ flowchart TD
     J[run_sample.py / run_bulk.py] --> K[batch.py]
     K --> L[pipeline.py]
     L --> B
+
+    M[review_export.py or FastAPI reviews route] --> N[review.py]
+    N --> H
 ```
 
 ---
@@ -115,6 +121,21 @@ flowchart TD
   - `create_review_decision(...)`
   - `get_review_history(...)`
 
+### Review Workflow
+
+- [backend/app/services/review.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/services/review.py)
+  - `ReviewDeps`
+  - `build_review_row(...)`
+  - `get_batch_review_rows(...)`
+  - `record_review_decision(...)`
+  - `get_review_history(...)`
+
+- [backend/scripts/review_export.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/scripts/review_export.py)
+  - `parse_args(...)`
+  - `write_csv(...)`
+  - `write_json(...)`
+  - `main(...)`
+
 ### Per-Lead Orchestration
 
 - [backend/app/services/pipeline.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/services/pipeline.py)
@@ -143,6 +164,23 @@ flowchart TD
 - [backend/scripts/run_bulk.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/scripts/run_bulk.py)
   - `parse_args(...)`
   - `main(...)`
+
+### API Shell
+
+- [backend/app/main.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/main.py)
+  - `lifespan(...)`
+  - `app`
+  - `health_check(...)`
+
+- [backend/app/api/deps.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/deps.py)
+  - `get_db_session(...)`
+  - `get_analyses_repository(...)`
+  - `get_reviews_repository(...)`
+  - `get_review_deps(...)`
+
+- [backend/app/api/reviews.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/reviews.py)
+  - `router`
+  - `list_review_rows(...)`
 
 ---
 
@@ -276,6 +314,59 @@ flowchart TD
 
 ---
 
+## Review And API Flow
+
+The review workflow starts from saved `lead_analyses` rows. It does not rerun Copper fetches, rules, triage, or pipeline processing.
+
+### Review Export Path
+
+`backend/scripts/review_export.py` does this:
+
+1. create a database engine and initialize tables
+2. create one SQLAlchemy session
+3. build `ReviewDeps`
+4. call `get_batch_review_rows(batch_run_id, deps)` in [review.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/services/review.py)
+5. write the returned rows to CSV or JSON
+
+### Review API Path
+
+`GET /reviews/runs/{batch_run_id}` does this:
+
+1. FastAPI receives the request in [api/reviews.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/reviews.py)
+2. `Depends(get_review_deps)` asks [api/deps.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/deps.py) to build the service dependencies
+3. `get_db_session(...)` creates a request-scoped SQLAlchemy session from `request.app.state.session_factory`
+4. repository dependencies wrap that session
+5. `get_review_deps(...)` returns `ReviewDeps`
+6. the route calls `get_batch_review_rows(...)`
+7. the review service loads saved analyses through `AnalysesRepository`
+8. the route returns flattened review rows
+
+```mermaid
+sequenceDiagram
+    participant Client as HTTP Client
+    participant App as main.py
+    participant Route as api/reviews.py
+    participant Deps as api/deps.py
+    participant Review as review.py
+    participant Repo as AnalysesRepository
+    participant DB as SQLite / SQLAlchemy
+
+    App->>App: lifespan startup creates engine and session_factory
+    Client->>Route: GET /reviews/runs/{batch_run_id}
+    Route->>Deps: Depends(get_review_deps)
+    Deps->>App: request.app.state.session_factory()
+    Deps-->>Route: ReviewDeps
+    Route->>Review: get_batch_review_rows(batch_run_id, deps)
+    Review->>Repo: list_analyses_for_run(batch_run_id)
+    Repo->>DB: SELECT lead_analyses
+    DB-->>Repo: stored rows
+    Repo-->>Review: list[StoredLeadAnalysis]
+    Review-->>Route: list[dict]
+    Route-->>Client: JSON review rows
+```
+
+---
+
 ## Current Test Coverage Map
 
 ### Rules
@@ -315,20 +406,27 @@ flowchart TD
   - duplicate lead handling
   - run counter updates
 
+### Review
+
+- [tests/test_review.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/tests/test_review.py)
+  - review row shaping with and without LLM output
+  - batch review row lookup
+  - review decision persistence
+  - review history and effective review status updates
+
 ---
 
 ## Current Gaps
 
-The current flow is functional, but these pieces are still not wired in:
+The current flow is functional, but these pieces are still incomplete:
 
 - `backend/app/clients/enrichment.py`
-- `backend/app/services/review.py`
 - `backend/app/api/leads.py`
 - `backend/app/api/runs.py`
-- `backend/app/api/reviews.py`
-- `backend/app/main.py`
+- review decision and history API routes
+- API tests with `TestClient`
 
-That means the backend core works locally through services and scripts, but the review surface and HTTP wrapper are still future steps.
+That means the backend core works locally through services and scripts, and the HTTP wrapper has started with review-row retrieval. The next API work should remain thin and test-driven.
 
 ---
 
@@ -346,8 +444,13 @@ If you want to understand the current system by reading code in the most logical
 8. [backend/app/repositories/runs.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/repositories/runs.py)
 9. [backend/app/services/pipeline.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/services/pipeline.py)
 10. [backend/app/services/batch.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/services/batch.py)
-11. [backend/scripts/run_sample.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/scripts/run_sample.py)
-12. [backend/scripts/run_bulk.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/scripts/run_bulk.py)
+11. [backend/app/services/review.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/services/review.py)
+12. [backend/scripts/run_sample.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/scripts/run_sample.py)
+13. [backend/scripts/run_bulk.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/scripts/run_bulk.py)
+14. [backend/scripts/review_export.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/scripts/review_export.py)
+15. [backend/app/main.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/main.py)
+16. [backend/app/api/deps.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/deps.py)
+17. [backend/app/api/reviews.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/reviews.py)
 
 ---
 
@@ -355,4 +458,5 @@ If you want to understand the current system by reading code in the most logical
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.1     | 2026-04-27 | Added review workflow, review export, and initial FastAPI lifespan/dependency/review-route flow details |
 | 1.0     | 2026-04-19 | Created a detailed visual and code-referenced system flow document covering the current normalize -> rules -> triage -> persistence -> pipeline -> batch architecture |

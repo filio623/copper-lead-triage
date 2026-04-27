@@ -1,8 +1,8 @@
 # Lead Triage Engine — Build Plan
 
 **Created:** 2026-04-13
-**Modified:** 2026-04-19
-**Version:** 1.7
+**Modified:** 2026-04-27
+**Version:** 1.8
 
 **Status:** Active working plan
 **Related Docs:** [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md), [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md), [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md), [system_flow.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/system_flow.md)
@@ -26,13 +26,15 @@ Already in place:
 - a local deterministic gate exists
 - a first `PydanticAI` triage prototype exists
 - a first `TriageInput` model now exists for the planned triage service contract
+- SQLAlchemy persistence, repositories, pipeline, batch processing, and review export now exist
+- the first FastAPI app shell, lifespan database setup, API dependency helpers, and review route now exist
 
 Not in place yet:
 
-- durable rule scoring output
 - enrichment adapters
-- API routes
-- review workflow
+- complete API routes for runs and leads
+- API tests
+- review UI
 
 ### Phase 0 Progress Note
 
@@ -299,6 +301,13 @@ Exit criteria:
 
 - a human can review saved analyses and record a decision
 
+Current status on 2026-04-27:
+
+- `backend/app/services/review.py` now builds review rows, records review decisions, and exposes review history through the service layer
+- `backend/scripts/review_export.py` now exports saved review rows for a batch run to CSV or JSON
+- `tests/test_review.py` now covers review-row shaping, batch review rows, review decisions, review history, and status updates
+- Phase 7 is complete enough to move into the API layer
+
 ### Phase 8 — API Layer
 
 Goal:
@@ -313,6 +322,7 @@ Deliverables:
 Target files:
 
 - [backend/app/main.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/main.py)
+- [backend/app/api/deps.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/deps.py)
 - [backend/app/api/leads.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/leads.py)
 - [backend/app/api/runs.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/runs.py)
 - [backend/app/api/reviews.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/reviews.py)
@@ -320,6 +330,14 @@ Target files:
 Exit criteria:
 
 - the API is only a wrapper around already-working services
+
+Current status on 2026-04-27:
+
+- `backend/app/main.py` now creates the FastAPI app, initializes the database during lifespan startup, stores the SQLAlchemy session factory on `app.state`, disposes the engine during shutdown, and includes the review router
+- `backend/app/api/deps.py` now provides request-scoped SQLAlchemy sessions, repository constructors, and `ReviewDeps` construction for route handlers
+- `backend/app/api/reviews.py` now exposes the first review endpoint: `GET /reviews/runs/{batch_run_id}`
+- `pyproject.toml` now includes FastAPI and points the FastAPI entrypoint at `backend.app.main:app`
+- the next step is to add API tests with `TestClient`, then continue with review decision routes and read-only run/lead routes
 
 ---
 
@@ -347,7 +365,7 @@ Exit criteria:
 - [x] Phase 4 complete
 - [x] Phase 5 complete
 - [x] Phase 6 complete
-- [ ] Phase 7 complete
+- [x] Phase 7 complete
 - [ ] Phase 8 complete
 
 ---
@@ -356,6 +374,7 @@ Exit criteria:
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.8     | 2026-04-27 | Recorded the completed review workflow service/export/tests and the first Phase 8 FastAPI app/dependency/review-route wiring |
 | 1.7     | 2026-04-19 | Recorded the first implemented Phase 6 batch services and scripts, marked Phase 6 complete, and linked the new system-flow document |
 | 1.6     | 2026-04-18 | Recorded the first implemented per-lead pipeline and marked Phases 2 through 5 complete enough to move into Phase 6 batch processing |
 | 1.5     | 2026-04-15 | Switched the new Phase 4 persistence layer from raw `sqlite3` to SQLAlchemy while keeping SQLite as the initial backing database |

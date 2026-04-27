@@ -1,10 +1,19 @@
-"""TODO build guide for review routes.
+from typing import Any
 
-Suggested endpoints:
-- `POST /reviews/{id}`
+from fastapi import APIRouter, Depends
 
-Implementation checklist:
-- accept approve, reject, or edited review decisions
-- persist reviewer notes
-- return the updated review state
-"""
+from backend.app.api.deps import get_review_deps
+from backend.app.services.review import ReviewDeps, get_batch_review_rows
+
+
+router = APIRouter(prefix="/reviews", tags=["reviews"])
+
+
+@router.get("/runs/{batch_run_id}")
+def list_review_rows(
+    batch_run_id: str,
+    deps: ReviewDeps = Depends(get_review_deps),
+) -> list[dict[str, Any]]:
+    # Routes should stay thin: FastAPI handles HTTP/dependency wiring, while
+    # the review service owns the actual review-row business shape.
+    return get_batch_review_rows(batch_run_id, deps)

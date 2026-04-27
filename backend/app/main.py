@@ -1,18 +1,35 @@
-"""TODO build guide for the FastAPI application entrypoint.
+from contextlib import asynccontextmanager
 
-Purpose:
-- create the FastAPI app only after the service layer works locally
-- wire route modules without putting business logic here
+from fastapi import FastAPI
 
-Implementation checklist:
-- create the FastAPI app instance
-- register startup and shutdown hooks if needed
-- include `api/leads.py`, `api/runs.py`, and `api/reviews.py`
-- wire config, logging, and dependency helpers
-- keep this file thin
+from backend.app.api.reviews import router as reviews_router
+from backend.app.models.db import create_database_engine, create_session_factory, initialize_database
 
-Questions to answer while implementing:
-- how should repositories be constructed and injected?
-- should the database be initialized on startup or separately?
-- what health or readiness endpoints are worth exposing?
-"""
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: create the shared DB engine, ensure tables exist, and store the
+    # request session factory where API dependencies can access it.
+    engine = create_database_engine()
+    initialize_database(engine)
+    app.state.engine = engine
+    app.state.session_factory = create_session_factory(engine=engine)
+
+    yield
+
+    # Shutdown: close SQLAlchemy's connection pool cleanly.
+    engine.dispose()
+
+
+app = FastAPI(lifespan=lifespan)
+
+app.include_router(reviews_router)
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}

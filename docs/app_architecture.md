@@ -1,8 +1,8 @@
 # Lead Scoring & Triage Engine — App Architecture
 
 **Created:** 2026-04-09
-**Modified:** 2026-04-19
-**Version:** 2.8
+**Modified:** 2026-04-27
+**Version:** 2.9
 
 **Project:** Step and Repeat LA — AI CRM Applications
 
@@ -26,7 +26,7 @@ The long-term product can still grow into a Copper embedded app and later into d
 
 ## Current Implementation Checkpoint
 
-As of 2026-04-18, the backend work has moved beyond the original local-script checkpoint but is still not yet a full service.
+As of 2026-04-27, the backend work has moved beyond the original local-script checkpoint and now has the first FastAPI service shell, but the API layer is still incomplete.
 
 Implemented now:
 
@@ -49,18 +49,24 @@ Implemented now:
 - `backend/app/services/batch.py` now implements the first Phase 6 batch orchestration layer over the per-lead pipeline
 - `backend/scripts/run_sample.py` and `backend/scripts/run_bulk.py` now run saved sample and bulk batches through the service layer
 - `tests/test_batch.py` now covers duplicate handling, failure handling, and batch run counter updates
+- `backend/app/services/review.py` now implements review-row shaping, review-decision recording, and review-history access
+- `backend/scripts/review_export.py` now exports saved review rows for a batch run to CSV or JSON
+- `tests/test_review.py` now covers review rows, review decisions, review history, and review-status updates
+- `backend/app/main.py` now creates the FastAPI app, initializes the database during lifespan startup, stores a request session factory on `app.state`, disposes the engine on shutdown, and includes the review router
+- `backend/app/api/deps.py` now provides request-scoped DB sessions, repository constructors, and service dependency construction for API routes
+- `backend/app/api/reviews.py` now exposes the first API route, `GET /reviews/runs/{batch_run_id}`
 
 Not implemented yet:
 
 - enrichment tools and external research
-- FastAPI endpoints
 - review queue UI
-- API wiring over the new pipeline and repositories
-- richer prompt/model metadata capture on saved analysis rows as the pipeline is completed
+- complete FastAPI route coverage for runs, leads, review decisions, and review history
+- API tests
+- richer prompt/model metadata capture as the pipeline is tuned
 
-This means the current project state is best understood as a usable backend workflow core: normalization, rules, triage, persistence, per-lead orchestration, and first-pass batch execution now exist, while review workflow and API exposure still need to be consolidated into the target service architecture.
+This means the current project state is best understood as a usable backend workflow core plus the first API shell: normalization, rules, triage, persistence, per-lead orchestration, batch execution, review export, and first review API route now exist.
 
-As of 2026-04-19, the recommended next step is to keep the first agent narrowly scoped to triage judgment and optional draft generation, keep online research as a later separate enrichment task, and move next into Phase 7 review workflow support so saved analyses can be inspected, exported, and annotated systematically.
+As of 2026-04-27, the recommended next step is to keep FastAPI thin by adding API tests and small route modules over already-working services before adding any new business behavior.
 
 ---
 
@@ -410,6 +416,13 @@ POST   /reviews/{id}           # approve, reject, or annotate a result
 
 Avoid Copper write-back endpoints in the first implementation unless they are explicitly manual and operator-triggered.
 
+Current API implementation status on 2026-04-27:
+
+- `backend/app/main.py` owns the `FastAPI` instance and app lifespan
+- `backend/app/api/deps.py` owns request-scoped sessions and service dependency construction
+- `backend/app/api/reviews.py` owns review HTTP routes and currently exposes `GET /reviews/runs/{batch_run_id}`
+- route handlers should remain thin adapters over service functions, not new homes for business logic
+
 ---
 
 ## Suggested Folder Layout
@@ -573,6 +586,7 @@ Because future complexity is not a reason to front-load present complexity. The 
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 2.9     | 2026-04-27 | Recorded the completed review workflow service/export/tests and the first FastAPI lifespan/dependency/review-route implementation |
 | 2.8     | 2026-04-19 | Recorded the first implemented Phase 6 batch services and runner scripts and moved the next milestone to review workflow support |
 | 2.7     | 2026-04-18 | Recorded the first implemented per-lead pipeline and set the next milestone as Phase 6 batch processing over the new pipeline |
 | 2.6     | 2026-04-15 | Switched the new Phase 4 persistence layer to SQLAlchemy while keeping SQLite as the initial local backing database |

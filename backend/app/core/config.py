@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     anthropic_api_key: SecretStr = Field(validation_alias="ANTHROPIC_API_KEY", description="API Key for Claude LLM")
     pydantic_ai_gateway_api_key: SecretStr = Field(alias="PYDANTIC_AI_GATEWAY_API_KEY", description="API Key for Pydantic AI Gateway")
 
+# MEM0 API credentials
+    mem0_api_key: SecretStr = Field(alias="MEM0_API_KEY", description="API Key for MEM0")
+    mem0_user_id: str = Field(alias="MEM0_USER_ID", description="User ID for MEM0")
+
 
 @lru_cache()
 def get_settings():

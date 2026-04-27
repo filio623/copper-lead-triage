@@ -14,8 +14,13 @@ dependencies = [
     "pydantic-settings",
     "pydantic-ai",
     "logfire",
+    "mem0ai",
     "sqlalchemy",
+    "fastapi[standard]>=0.136.1",
 ]
 
 [tool.hatch.build.targets.wheel]
 packages = ["backend"]
+
+[tool.fastapi]
+entrypoint = "backend.app.main:app"
