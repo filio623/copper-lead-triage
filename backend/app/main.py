@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from backend.app.api.reviews import router as reviews_router
+from backend.app.api.runs import router as runs_router
 from backend.app.models.db import create_database_engine, create_session_factory, initialize_database
 
 
@@ -24,6 +25,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(reviews_router)
+app.include_router(runs_router)
 
 
 @app.get("/")

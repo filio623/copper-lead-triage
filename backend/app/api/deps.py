@@ -3,7 +3,10 @@ from sqlalchemy.orm import Session
 
 from backend.app.repositories.analyses import AnalysesRepository
 from backend.app.repositories.reviews import ReviewsRepository
+from backend.app.repositories.runs import RunsRepository
+from backend.app.services.batch import BatchDeps
 from backend.app.services.review import ReviewDeps
+from backend.app.services.pipeline import PipelineDeps
 
 
 def get_db_session(request: Request):
@@ -32,3 +35,15 @@ def get_review_deps(
         analyses_repository=analyses_repository,
         reviews_repository=reviews_repository,
     )
+
+def get_runs_repository(session: Session = Depends(get_db_session)) -> RunsRepository:
+    return RunsRepository(session)
+
+def get_pipeline_deps(analyses_repository: AnalysesRepository = Depends(get_analyses_repository)) -> PipelineDeps:
+    return PipelineDeps(analyses_repository=analyses_repository)
+
+def get_batch_deps(
+        runs_repository: RunsRepository = Depends(get_runs_repository),
+        pipeline_deps: PipelineDeps = Depends(get_pipeline_deps),
+    ) -> BatchDeps:
+    return BatchDeps(runs_repository=runs_repository, pipeline_deps=pipeline_deps)
