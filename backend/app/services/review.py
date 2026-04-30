@@ -50,4 +50,7 @@ def record_review_decision(
 
 
 def get_review_history(analysis_id: str, deps: ReviewDeps) -> list[ReviewDecision]:
+    analysis = deps.analyses_repository.get_analysis_by_id(analysis_id=analysis_id)
+    if analysis is None:
+        raise ValueError(f"Analysis {analysis_id} does not exist")
     return deps.reviews_repository.get_review_history(analysis_id=analysis_id)

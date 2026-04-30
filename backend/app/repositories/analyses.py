@@ -95,6 +95,16 @@ class AnalysesRepository:
             return None
         return lead_analysis_orm_to_model(row)
 
+    def get_analysis_by_id(self, analysis_id: str) -> StoredLeadAnalysis | None:
+
+        row = self.session.get(LeadAnalysisORM, analysis_id)
+
+        if row is None:
+            return None
+        return lead_analysis_orm_to_model(row)
+
+
+
     def list_analyses_for_run(self, batch_run_id: str) -> list[StoredLeadAnalysis]:
         rows = self.session.scalars(
             select(LeadAnalysisORM)
@@ -113,3 +123,4 @@ class AnalysesRepository:
         row.review_status = review_status
         row.updated_at = serialize_datetime(datetime.now(UTC)) or ""
         self.session.commit()
+
