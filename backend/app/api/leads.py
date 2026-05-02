@@ -1,12 +1,17 @@
-"""TODO build guide for lead analysis routes.
+from fastapi import APIRouter, Depends, HTTPException
 
-Suggested endpoints:
-- `POST /leads/score`
-- `GET /leads/{id}/analysis`
+from backend.app.api.deps import get_analyses_repository
+from backend.app.repositories.analyses import AnalysesRepository
+from backend.app.models.db import StoredLeadAnalysis
 
-Implementation checklist:
-- validate request models
-- call service-layer pipeline functions
-- return stored analysis results
-- avoid embedding business logic in the route handlers
-"""
+
+router = APIRouter(prefix="/leads", tags=["leads"])
+
+
+
+@router.get("/{copper_lead_id}/analysis")
+def get_latest_lead_analysis(copper_lead_id: int, analyses_repository: AnalysesRepository = Depends(get_analyses_repository)) -> StoredLeadAnalysis:
+    analysis = analyses_repository.get_latest_analysis(copper_lead_id)
+    if analysis is None:
+        raise HTTPException(status_code=404, detail=f"No analysis for Copper lead {copper_lead_id}")
+    return analysis
