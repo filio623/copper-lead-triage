@@ -1,8 +1,8 @@
 # Lead Scoring & Triage Engine — App Architecture
 
 **Created:** 2026-04-09
-**Modified:** 2026-04-27
-**Version:** 2.9
+**Modified:** 2026-05-01
+**Version:** 2.10
 
 **Project:** Step and Repeat LA — AI CRM Applications
 
@@ -26,7 +26,7 @@ The long-term product can still grow into a Copper embedded app and later into d
 
 ## Current Implementation Checkpoint
 
-As of 2026-04-27, the backend work has moved beyond the original local-script checkpoint and now has the first FastAPI service shell, but the API layer is still incomplete.
+As of 2026-05-01, the backend work has moved beyond the original local-script checkpoint and now has a tested first FastAPI surface for safe saved-data and review operations.
 
 Implemented now:
 
@@ -54,19 +54,22 @@ Implemented now:
 - `tests/test_review.py` now covers review rows, review decisions, review history, and review-status updates
 - `backend/app/main.py` now creates the FastAPI app, initializes the database during lifespan startup, stores a request session factory on `app.state`, disposes the engine on shutdown, and includes the review router
 - `backend/app/api/deps.py` now provides request-scoped DB sessions, repository constructors, and service dependency construction for API routes
-- `backend/app/api/reviews.py` now exposes the first API route, `GET /reviews/runs/{batch_run_id}`
+- `backend/app/api/reviews.py` now exposes review rows, review decision recording, and review decision history
+- `backend/app/api/runs.py` now exposes `GET /runs/{run_id}` for read-only run lookup
+- `backend/app/api/leads.py` now exposes `GET /leads/{copper_lead_id}/analysis` for read-only latest saved analysis lookup
+- `tests/test_api_reviews.py`, `tests/test_api_runs.py`, and `tests/test_api_leads.py` now cover the implemented API routes with temporary SQLite databases
 
 Not implemented yet:
 
 - enrichment tools and external research
 - review queue UI
-- complete FastAPI route coverage for runs, leads, review decisions, and review history
-- API tests
+- polished API route formatting and shared API test fixtures
+- safe tested execution endpoints for Copper-fetching or LLM-triggering work
 - richer prompt/model metadata capture as the pipeline is tuned
 
-This means the current project state is best understood as a usable backend workflow core plus the first API shell: normalization, rules, triage, persistence, per-lead orchestration, batch execution, review export, and first review API route now exist.
+This means the current project state is best understood as a usable backend workflow core plus a first safe API surface: normalization, rules, triage, persistence, per-lead orchestration, batch execution, review export, review API, run lookup, and latest saved lead analysis lookup now exist.
 
-As of 2026-04-27, the recommended next step is to keep FastAPI thin by adding API tests and small route modules over already-working services before adding any new business behavior.
+As of 2026-05-01, the recommended next step is to clean up and consolidate the API layer before adding any endpoint that triggers external work such as Copper fetches or LLM calls.
 
 ---
 
@@ -406,22 +409,25 @@ FastAPI should be a thin service wrapper added after the local pipeline works.
 Recommended early endpoints:
 
 ```text
-POST   /runs/sample            # run a small evaluation batch
-POST   /runs/bulk              # start a bulk analysis run
+POST   /runs/sample            # run a small evaluation batch, defer until safety controls are clear
+POST   /runs/bulk              # start a bulk analysis run, defer until safety controls are clear
 GET    /runs/{id}              # run status and counters
-POST   /leads/score            # analyze one lead by ID
+POST   /leads/score            # analyze one lead by ID, defer until the input contract is explicit
 GET    /leads/{id}/analysis    # fetch the latest stored analysis
 POST   /reviews/{id}           # approve, reject, or annotate a result
 ```
 
 Avoid Copper write-back endpoints in the first implementation unless they are explicitly manual and operator-triggered.
 
-Current API implementation status on 2026-04-27:
+Current API implementation status on 2026-05-01:
 
 - `backend/app/main.py` owns the `FastAPI` instance and app lifespan
 - `backend/app/api/deps.py` owns request-scoped sessions and service dependency construction
-- `backend/app/api/reviews.py` owns review HTTP routes and currently exposes `GET /reviews/runs/{batch_run_id}`
+- `backend/app/api/reviews.py` owns review HTTP routes and exposes review rows, decision writes, and decision history
+- `backend/app/api/runs.py` owns run HTTP routes and currently has tested read-only run lookup
+- `backend/app/api/leads.py` owns lead HTTP routes and currently has tested read-only latest-analysis lookup
 - route handlers should remain thin adapters over service functions, not new homes for business logic
+- API routes that trigger Copper or LLM work should be treated as execution endpoints and designed separately from read-only saved-data endpoints
 
 ---
 
@@ -586,6 +592,7 @@ Because future complexity is not a reason to front-load present complexity. The 
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 2.10    | 2026-05-01 | Recorded the tested review, run lookup, and latest lead analysis API routes and deferred external-work endpoints |
 | 2.9     | 2026-04-27 | Recorded the completed review workflow service/export/tests and the first FastAPI lifespan/dependency/review-route implementation |
 | 2.8     | 2026-04-19 | Recorded the first implemented Phase 6 batch services and runner scripts and moved the next milestone to review workflow support |
 | 2.7     | 2026-04-18 | Recorded the first implemented per-lead pipeline and set the next milestone as Phase 6 batch processing over the new pipeline |

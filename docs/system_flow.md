@@ -1,8 +1,8 @@
 # Lead Triage Engine — System Flow
 
 **Created:** 2026-04-19
-**Modified:** 2026-04-27
-**Version:** 1.1
+**Modified:** 2026-05-01
+**Version:** 1.2
 
 **Status:** Active implementation reference
 **Related Docs:** [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md), [build_plan.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/build_plan.md)
@@ -11,7 +11,7 @@
 
 ## Purpose
 
-This document shows how the current backend works end to end as of 2026-04-27. It is meant to make the functional flow visible across modules, services, repositories, scripts, and the first FastAPI route wiring.
+This document shows how the current backend works end to end as of 2026-05-01. It is meant to make the functional flow visible across modules, services, repositories, scripts, and the first tested FastAPI route wiring.
 
 Use this document when you want to answer questions like:
 
@@ -34,9 +34,9 @@ The codebase currently has seven working backend layers:
 4. persistence
 5. per-lead and batch orchestration
 6. review workflow and export
-7. initial FastAPI shell and review route
+7. initial tested FastAPI shell for review, run lookup, and lead latest-analysis lookup
 
-The remaining API layer is still incomplete. Current API work covers app startup, dependency wiring, and the first review row route.
+The remaining API layer is still incomplete. Current API work covers app startup, dependency wiring, review routes, read-only run lookup, and read-only latest lead analysis lookup.
 
 ---
 
@@ -60,6 +60,10 @@ flowchart TD
 
     M[review_export.py or FastAPI reviews route] --> N[review.py]
     N --> H
+
+    O[FastAPI runs route] --> P[RunsRepository]
+    P --> I
+    Q[FastAPI leads route] --> H
 ```
 
 ---
@@ -177,10 +181,25 @@ flowchart TD
   - `get_analyses_repository(...)`
   - `get_reviews_repository(...)`
   - `get_review_deps(...)`
+  - `get_runs_repository(...)`
+  - `get_pipeline_deps(...)`
+  - `get_batch_deps(...)`
 
 - [backend/app/api/reviews.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/reviews.py)
   - `router`
   - `list_review_rows(...)`
+  - `record_decision(...)`
+  - `get_review_decision_history(...)`
+
+- [backend/app/api/runs.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/runs.py)
+  - `router`
+  - `get_run(...)`
+  - `create_sample_run(...)`
+  - `create_bulk_run(...)`
+
+- [backend/app/api/leads.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/leads.py)
+  - `router`
+  - `get_latest_lead_analysis(...)`
 
 ---
 
@@ -328,7 +347,7 @@ The review workflow starts from saved `lead_analyses` rows. It does not rerun Co
 4. call `get_batch_review_rows(batch_run_id, deps)` in [review.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/services/review.py)
 5. write the returned rows to CSV or JSON
 
-### Review API Path
+### Review API Paths
 
 `GET /reviews/runs/{batch_run_id}` does this:
 
@@ -364,6 +383,34 @@ sequenceDiagram
     Review-->>Route: list[dict]
     Route-->>Client: JSON review rows
 ```
+
+`POST /reviews/{analysis_id}` records a human review decision through `record_review_decision(...)`. The route translates missing analyses into HTTP `404`.
+
+`GET /reviews/{analysis_id}/history` returns saved review decisions through `get_review_history(...)`.
+
+### Run API Path
+
+`GET /runs/{run_id}` is read-only and does this:
+
+1. FastAPI receives the request in [api/runs.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/runs.py)
+2. `Depends(get_runs_repository)` asks [api/deps.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/deps.py) for a request-scoped repository
+3. the route calls `RunsRepository.get_run(run_id)`
+4. a missing run returns HTTP `404`
+5. an existing run returns `BatchRun`
+
+The existing `POST /runs/sample` and `POST /runs/bulk` routes trigger Copper fetch and batch processing. They exist in code but should be treated as execution endpoints and exercised cautiously until safety controls and tests are clearer.
+
+### Lead API Path
+
+`GET /leads/{copper_lead_id}/analysis` is read-only and does this:
+
+1. FastAPI receives the request in [api/leads.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/leads.py)
+2. `Depends(get_analyses_repository)` asks [api/deps.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/deps.py) for a request-scoped repository
+3. the route calls `AnalysesRepository.get_latest_analysis(copper_lead_id)`
+4. a missing saved analysis returns HTTP `404`
+5. an existing analysis returns `StoredLeadAnalysis`
+
+`POST /leads/score` remains deferred. Do not add it until its input contract is explicit: raw lead JSON, normalized lead JSON, or Copper lead ID each imply different safety and orchestration behavior.
 
 ---
 
@@ -414,6 +461,23 @@ sequenceDiagram
   - review decision persistence
   - review history and effective review status updates
 
+### API
+
+- [tests/test_api_reviews.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/tests/test_api_reviews.py)
+  - health check
+  - review rows by batch run
+  - review decision writes
+  - review decision history
+  - missing analysis `404`
+
+- [tests/test_api_runs.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/tests/test_api_runs.py)
+  - run lookup
+  - missing run `404`
+
+- [tests/test_api_leads.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/tests/test_api_leads.py)
+  - latest saved lead analysis lookup
+  - missing saved lead analysis `404`
+
 ---
 
 ## Current Gaps
@@ -421,12 +485,11 @@ sequenceDiagram
 The current flow is functional, but these pieces are still incomplete:
 
 - `backend/app/clients/enrichment.py`
-- `backend/app/api/leads.py`
-- `backend/app/api/runs.py`
-- review decision and history API routes
-- API tests with `TestClient`
+- shared API test fixtures to reduce duplication across `tests/test_api_*.py`
+- cleanup of API route formatting and unused imports
+- safe tests and contracts for execution endpoints that trigger Copper or LLM work
 
-That means the backend core works locally through services and scripts, and the HTTP wrapper has started with review-row retrieval. The next API work should remain thin and test-driven.
+That means the backend core works locally through services and scripts, and the HTTP wrapper now exposes tested saved-data and review endpoints. The next API work should focus on cleanup before adding routes that perform new external work.
 
 ---
 
@@ -451,6 +514,8 @@ If you want to understand the current system by reading code in the most logical
 15. [backend/app/main.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/main.py)
 16. [backend/app/api/deps.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/deps.py)
 17. [backend/app/api/reviews.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/reviews.py)
+18. [backend/app/api/runs.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/runs.py)
+19. [backend/app/api/leads.py](/Users/jamesfilios/Software_Projects/copper-lead-triage/backend/app/api/leads.py)
 
 ---
 
@@ -458,5 +523,6 @@ If you want to understand the current system by reading code in the most logical
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.2     | 2026-05-01 | Recorded the tested API routes for reviews, run lookup, and latest lead analysis lookup, and documented deferred execution endpoints |
 | 1.1     | 2026-04-27 | Added review workflow, review export, and initial FastAPI lifespan/dependency/review-route flow details |
 | 1.0     | 2026-04-19 | Created a detailed visual and code-referenced system flow document covering the current normalize -> rules -> triage -> persistence -> pipeline -> batch architecture |

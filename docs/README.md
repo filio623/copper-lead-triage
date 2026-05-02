@@ -1,8 +1,8 @@
 # Docs Index
 
 **Created:** 2026-04-10
-**Modified:** 2026-04-27
-**Version:** 1.7
+**Modified:** 2026-05-01
+**Version:** 1.8
 
 ---
 
@@ -18,11 +18,11 @@ The active documents below should be treated as the current starting point. Arch
 
 | Document | Purpose |
 |---|---|
-| [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md) | Current backend-first v1 architecture, build plan, implementation checkpoint, and first API-layer status |
+| [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md) | Current backend-first v1 architecture, build plan, implementation checkpoint, and tested API-layer status |
 | [build_plan.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/build_plan.md) | Step-by-step implementation checklist and target module map for building the app through the current FastAPI phase |
 | [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md) | Current CRM verification reference, live snapshot, and API verification methods |
 | [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md) | First-pass manual review rubric derived from the labeled Phase 0 lead sample |
-| [system_flow.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/system_flow.md) | Detailed visual and code-referenced flow map showing how the current backend modules, review workflow, and first API route work together |
+| [system_flow.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/system_flow.md) | Detailed visual and code-referenced flow map showing how the current backend modules, review workflow, and tested API routes work together |
 
 ---
 
@@ -49,6 +49,7 @@ The active documents below should be treated as the current starting point. Arch
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.8     | 2026-05-01 | Refreshed the docs index after adding tested review, run lookup, and latest lead analysis API routes |
 | 1.7     | 2026-04-27 | Refreshed the docs index after review workflow completion and the first FastAPI app/dependency/review-route wiring |
 | 1.6     | 2026-04-19 | Added the active system-flow document and refreshed the docs index for the new pipeline and batch milestones |
 | 1.5     | 2026-04-13 | Refreshed the active docs index after the Phase 0 rubric and deterministic rules milestone |

@@ -1,8 +1,8 @@
 # Lead Triage Engine — Build Plan
 
 **Created:** 2026-04-13
-**Modified:** 2026-04-27
-**Version:** 1.8
+**Modified:** 2026-05-01
+**Version:** 1.9
 
 **Status:** Active working plan
 **Related Docs:** [app_architecture.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/app_architecture.md), [crm_findings_for_verification.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/crm_findings_for_verification.md), [phase0_review_rubric.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/phase0_review_rubric.md), [system_flow.md](/Users/jamesfilios/Software_Projects/copper-lead-triage/docs/system_flow.md)
@@ -27,13 +27,12 @@ Already in place:
 - a first `PydanticAI` triage prototype exists
 - a first `TriageInput` model now exists for the planned triage service contract
 - SQLAlchemy persistence, repositories, pipeline, batch processing, and review export now exist
-- the first FastAPI app shell, lifespan database setup, API dependency helpers, and review route now exist
+- the first FastAPI app shell, lifespan database setup, API dependency helpers, review routes, run lookup route, and lead latest-analysis route now exist
 
 Not in place yet:
 
 - enrichment adapters
-- complete API routes for runs and leads
-- API tests
+- tested API endpoints that trigger new Copper/LLM processing
 - review UI
 
 ### Phase 0 Progress Note
@@ -331,13 +330,17 @@ Exit criteria:
 
 - the API is only a wrapper around already-working services
 
-Current status on 2026-04-27:
+Current status on 2026-05-01:
 
 - `backend/app/main.py` now creates the FastAPI app, initializes the database during lifespan startup, stores the SQLAlchemy session factory on `app.state`, disposes the engine during shutdown, and includes the review router
 - `backend/app/api/deps.py` now provides request-scoped SQLAlchemy sessions, repository constructors, and `ReviewDeps` construction for route handlers
-- `backend/app/api/reviews.py` now exposes the first review endpoint: `GET /reviews/runs/{batch_run_id}`
+- `backend/app/api/reviews.py` now exposes review-row, review-decision, and review-history endpoints
+- `backend/app/api/runs.py` now exposes the safe read-only run lookup endpoint `GET /runs/{run_id}`
+- `backend/app/api/leads.py` now exposes the safe read-only latest saved analysis endpoint `GET /leads/{copper_lead_id}/analysis`
+- `tests/test_api_reviews.py`, `tests/test_api_runs.py`, and `tests/test_api_leads.py` now cover the current API surface with temporary SQLite databases
 - `pyproject.toml` now includes FastAPI and points the FastAPI entrypoint at `backend.app.main:app`
-- the next step is to add API tests with `TestClient`, then continue with review decision routes and read-only run/lead routes
+- external-work endpoints such as `POST /leads/score`, `POST /runs/sample`, and `POST /runs/bulk` should remain limited/deferred until their input contracts, network behavior, and safety controls are clearer
+- the next step is cleanup and consolidation of the API layer before adding new behavior
 
 ---
 
@@ -374,6 +377,7 @@ Current status on 2026-04-27:
 
 | Version | Date       | Description |
 |---------|------------|-------------|
+| 1.9     | 2026-05-01 | Recorded the tested read-only FastAPI surface for reviews, runs, and latest lead analysis, and noted that external-work endpoints remain deferred |
 | 1.8     | 2026-04-27 | Recorded the completed review workflow service/export/tests and the first Phase 8 FastAPI app/dependency/review-route wiring |
 | 1.7     | 2026-04-19 | Recorded the first implemented Phase 6 batch services and scripts, marked Phase 6 complete, and linked the new system-flow document |
 | 1.6     | 2026-04-18 | Recorded the first implemented per-lead pipeline and marked Phases 2 through 5 complete enough to move into Phase 6 batch processing |
